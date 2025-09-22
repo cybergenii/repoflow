@@ -43,7 +43,7 @@ jobs:
         npm ci
         cd ui && npm ci
         ls -la ui/
-        which vite || echo "Vite not found in PATH"
+        ls -la ui/node_modules/.bin/ | grep vite || echo "Vite not found in node_modules"
     
     - name: Run tests
       run: |
@@ -54,7 +54,12 @@ jobs:
       run: npm run build
     
     - name: Build React UI
-      run: cd ui && npm run build
+      run: |
+        cd ui
+        cat package.json | grep -A 5 -B 5 vite
+        npm ci
+        ls -la node_modules/.bin/ | grep vite
+        npm run build
     
     - name: Build executables
       run: node build.js
