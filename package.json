@@ -1,6 +1,6 @@
 {
   "name": "repoflow",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A comprehensive GitHub repository management tool with CLI and Web UI support",
   "main": "dist/index.js",
   "bin": {
@@ -98,14 +98,22 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
-    "roots": ["<rootDir>/src"],
-    "testMatch": ["**/__tests__/**/*.test.ts"],
+    "roots": [
+      "<rootDir>/src"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.ts"
+    ],
     "collectCoverageFrom": [
       "src/**/*.ts",
       "!src/**/*.d.ts",
       "!src/__tests__/**/*"
     ],
     "coverageDirectory": "coverage",
-    "coverageReporters": ["text", "lcov", "html"]
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ]
   }
 }
