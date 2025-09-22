@@ -94,7 +94,7 @@ const Settings: React.FC = () => {
               value={settings.username}
               onChange={(e) => setSettings({ ...settings, username: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="yourusername"
+              placeholder="cybergenii"
             />
           </div>
 
@@ -141,7 +141,7 @@ const Settings: React.FC = () => {
         <div className="space-y-2 text-sm text-gray-600">
           <p>Version: 1.0.0</p>
           <p>License: MIT</p>
-          <p>Repository: <a href="https://github.com/yourusername/repoflow" className="text-blue-600 hover:underline">GitHub</a></p>
+          <p>Repository: <a href="https://github.com/cybergenii/repoflow" className="text-blue-600 hover:underline">GitHub</a></p>
         </div>
       </div>
     </div>

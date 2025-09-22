@@ -1,0 +1,201 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        components: rustfmt, clippy
+    
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd ui && npm ci
+    
+    - name: Build TypeScript
+      run: npm run build
+    
+    - name: Build React UI
+      run: cd ui && npm run build
+    
+    - name: Build executables
+      run: node build.js
+    
+    - name: Build Python package
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install build twine
+        python -m build
+    
+    - name: Build Rust package
+      run: cargo build --release
+    
+    - name: Create release assets directory
+      run: mkdir -p release-assets
+    
+    - name: Copy Node.js executables
+      run: |
+        cp dist-packages/*.exe release-assets/ 2>/dev/null || true
+        cp dist-packages/*.sh release-assets/ 2>/dev/null || true
+        cp dist-packages/install-*.bat release-assets/ 2>/dev/null || true
+        cp dist-packages/install-*.sh release-assets/ 2>/dev/null || true
+        cp dist-packages/README.md release-assets/ 2>/dev/null || true
+    
+    - name: Copy Python packages
+      run: |
+        cp dist/*.whl release-assets/ 2>/dev/null || true
+        cp dist/*.tar.gz release-assets/ 2>/dev/null || true
+    
+    - name: Copy Rust executables
+      run: |
+        cp target/release/repoflow release-assets/repoflow-linux-x64 2>/dev/null || true
+    
+    - name: Create platform-specific packages
+      run: |
+        # Create Windows package
+        mkdir -p release-assets/windows
+        cp dist-packages/*.exe release-assets/windows/ 2>/dev/null || true
+        cp dist-packages/install-windows.bat release-assets/windows/ 2>/dev/null || true
+        cp dist-packages/README.md release-assets/windows/ 2>/dev/null || true
+        cd release-assets/windows && zip -r ../repoflow-windows.zip . && cd ../..
+        
+        # Create Linux package
+        mkdir -p release-assets/linux
+        cp dist-packages/repoflow-linux-x64 release-assets/linux/ 2>/dev/null || true
+        cp dist-packages/install-linux.sh release-assets/linux/ 2>/dev/null || true
+        cp dist-packages/README.md release-assets/linux/ 2>/dev/null || true
+        cd release-assets/linux && tar -czf ../repoflow-linux.tar.gz . && cd ../..
+        
+        # Create macOS package
+        mkdir -p release-assets/macos
+        cp dist-packages/repoflow-darwin-* release-assets/macos/ 2>/dev/null || true
+        cp dist-packages/install-macos.sh release-assets/macos/ 2>/dev/null || true
+        cp dist-packages/README.md release-assets/macos/ 2>/dev/null || true
+        cd release-assets/macos && tar -czf ../repoflow-macos.tar.gz . && cd ../..
+    
+    - name: Get version from tag
+      id: get_version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        name: RepoFlow ${{ steps.get_version.outputs.VERSION }}
+        body: |
+          ## 🚀 RepoFlow ${{ steps.get_version.outputs.VERSION }}
+          
+          A comprehensive GitHub repository management tool with CLI and Web UI support.
+          
+          ### 📦 Downloads
+          
+          **Platform-Specific Packages:**
+          - `repoflow-windows.zip` - Windows executables and installer
+          - `repoflow-linux.tar.gz` - Linux executable and installer
+          - `repoflow-macos.tar.gz` - macOS executables and installer
+          
+          **Individual Executables:**
+          - `repoflow-win32-x64.exe` - Windows 64-bit executable
+          - `repoflow-linux-x64` - Linux 64-bit executable
+          - `repoflow-darwin-x64` - macOS Intel executable
+          - `repoflow-darwin-arm64` - macOS Apple Silicon executable
+          
+          **Package Managers:**
+          - `*.whl` - Python wheel package
+          - `*.tar.gz` - Python source package
+          
+          ### 🚀 Quick Start
+          
+          **Windows:**
+          1. Download `repoflow-windows.zip`
+          2. Extract and run `install-windows.bat` as administrator
+          3. Use `repoflow` command anywhere
+          
+          **Linux:**
+          1. Download `repoflow-linux.tar.gz`
+          2. Extract and run `./install-linux.sh`
+          3. Use `repoflow` command anywhere
+          
+          **macOS:**
+          1. Download `repoflow-macos.tar.gz`
+          2. Extract and run `./install-macos.sh`
+          3. Use `repoflow` command anywhere
+          
+          **Package Managers:**
+          ```bash
+          # NPM
+          npm install -g repoflow
+          
+          # Python
+          pip install repoflow
+          
+          # Rust
+          cargo install repoflow
+          ```
+          
+          ### 🌐 Web UI
+          ```bash
+          repoflow ui --open
+          ```
+          
+          ### 📚 Documentation
+          - [README](https://github.com/cybergenii/repoflow#readme)
+          - [Terminal Usage Guide](https://github.com/cybergenii/repoflow/blob/main/TERMINAL_USAGE.md)
+          
+          ### 🔧 Features
+          - ✅ Repository Management
+          - ✅ Smart Commits
+          - ✅ Backdating
+          - ✅ Multiple Commits
+          - ✅ Cross-Platform Support
+          - ✅ React Web UI
+          - ✅ CLI Interface
+          - ✅ Interactive Mode
+        files: |
+          release-assets/*.zip
+          release-assets/*.tar.gz
+          release-assets/*.exe
+          release-assets/*.whl
+          release-assets/*.sh
+          release-assets/*.bat
+          release-assets/README.md
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

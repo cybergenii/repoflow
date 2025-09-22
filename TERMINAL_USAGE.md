@@ -17,7 +17,7 @@ npx repoflow --help
 **Available Commands:**
 ```bash
 # Configure RepoFlow
-repoflow config --token YOUR_GITHUB_TOKEN --username yourusername --email your@email.com
+repoflow config --token YOUR_GITHUB_TOKEN --username cybergenii --email your@email.com
 
 # Create a new repository
 repoflow create my-awesome-repo --description "My awesome project" --private
@@ -48,7 +48,7 @@ pipx install repoflow
 **Available Commands:**
 ```bash
 # Configure RepoFlow
-repoflow config --token YOUR_GITHUB_TOKEN --username yourusername --email your@email.com
+repoflow config --token YOUR_GITHUB_TOKEN --username cybergenii --email your@email.com
 
 # Create a new repository
 repoflow create my-awesome-repo --description "My awesome project" --private
@@ -73,7 +73,7 @@ repoflow ui
 cargo install repoflow
 
 # Or build from source
-git clone https://github.com/yourusername/repoflow.git
+git clone https://github.com/cybergenii/repoflow.git
 cd repoflow
 cargo build --release
 ```
@@ -81,7 +81,7 @@ cargo build --release
 **Available Commands:**
 ```bash
 # Configure RepoFlow
-repoflow config --token YOUR_GITHUB_TOKEN --username yourusername --email your@email.com
+repoflow config --token YOUR_GITHUB_TOKEN --username cybergenii --email your@email.com
 
 # Create a new repository
 repoflow create my-awesome-repo --description "My awesome project" --private
@@ -101,7 +101,7 @@ repoflow ui
 
 ### 4. **Pre-built Executables**
 
-Download from [GitHub Releases](https://github.com/yourusername/repoflow/releases) and run:
+Download from [GitHub Releases](https://github.com/cybergenii/repoflow/releases) and run:
 
 **Windows:**
 ```cmd
@@ -163,7 +163,7 @@ Set these environment variables for automatic configuration:
 ```bash
 # GitHub Configuration
 export GITHUB_TOKEN=your_token_here
-export GITHUB_USERNAME=yourusername
+export GITHUB_USERNAME=cybergenii
 export GITHUB_EMAIL=your@email.com
 
 # Git Configuration
@@ -233,7 +233,7 @@ repoflow ui --host 0.0.0.0 --port 3000
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/repoflow.git
+git clone https://github.com/cybergenii/repoflow.git
 cd repoflow
 
 # Install dependencies
@@ -298,10 +298,10 @@ repoflow ui --help
 
 ## 📚 Additional Resources
 
-- **Documentation**: [GitHub Wiki](https://github.com/yourusername/repoflow/wiki)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/repoflow/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/repoflow/discussions)
+- **Documentation**: [GitHub Wiki](https://github.com/cybergenii/repoflow/wiki)
+- **Issues**: [GitHub Issues](https://github.com/cybergenii/repoflow/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/cybergenii/repoflow/discussions)
 
 ---
 
-**Note**: Replace `yourusername` with your actual GitHub username in all URLs and commands.
+**Note**: Replace `cybergenii` with your actual GitHub username in all URLs and commands.

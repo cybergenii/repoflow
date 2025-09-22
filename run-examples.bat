@@ -31,7 +31,7 @@ echo.
 echo 🔧 Configuration Examples:
 echo ==========================
 echo # Configure with GitHub token
-echo repoflow config --token YOUR_GITHUB_TOKEN --username yourusername --email your@email.com
+echo repoflow config --token YOUR_GITHUB_TOKEN --username cybergenii --email your@email.com
 echo.
 
 echo 📁 Repository Management:

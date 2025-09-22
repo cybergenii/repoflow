@@ -5,9 +5,9 @@ edition = "2021"
 authors = ["Your Name <your.email@example.com>"]
 description = "A comprehensive GitHub repository management tool with CLI and Web UI support"
 license = "MIT"
-repository = "https://github.com/yourusername/repoflow"
-homepage = "https://github.com/yourusername/repoflow"
-documentation = "https://github.com/yourusername/repoflow#readme"
+repository = "https://github.com/cybergenii/repoflow"
+homepage = "https://github.com/cybergenii/repoflow"
+documentation = "https://github.com/cybergenii/repoflow#readme"
 keywords = ["github", "git", "repository", "automation", "cli", "management"]
 categories = ["command-line-utilities", "development-tools"]
 
