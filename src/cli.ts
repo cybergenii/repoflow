@@ -12,10 +12,15 @@ import { loadConfig, saveConfig } from './utils/config';
 
 const program = new Command();
 
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8'));
+
 program
   .name('repoflow')
   .description('A comprehensive GitHub repository management tool')
-  .version('1.0.0');
+  .version(packageJson.version);
 
 // Configure command
 program

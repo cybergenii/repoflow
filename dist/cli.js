@@ -48,10 +48,13 @@ const commit_messages_1 = require("./utils/commit-messages");
 const config_1 = require("./utils/config");
 const program = new commander_1.Command();
 exports.program = program;
+const fs_1 = require("fs");
+const path_1 = require("path");
+const packageJson = JSON.parse((0, fs_1.readFileSync)((0, path_1.join)(__dirname, '../package.json'), 'utf-8'));
 program
     .name('repoflow')
     .description('A comprehensive GitHub repository management tool')
-    .version('1.0.0');
+    .version(packageJson.version);
 // Configure command
 program
     .command('config')
