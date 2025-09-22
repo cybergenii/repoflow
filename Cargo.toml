@@ -2,7 +2,7 @@
 name = "repoflow"
 version = "1.0.0"
 edition = "2021"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["Derek Og cybersgenii@gmail.com"]
 description = "A comprehensive GitHub repository management tool with CLI and Web UI support"
 license = "MIT"
 repository = "https://github.com/cybergenii/repoflow"

@@ -143,7 +143,7 @@ RepoFlow stores configuration in:
 export GITHUB_TOKEN=your_token_here
 export GITHUB_USERNAME=cybergenii
 export GITHUB_EMAIL=your@email.com
-export GIT_USER_NAME="Your Name"
+export GIT_USER_NAME="Derek Og"
 export GIT_USER_EMAIL=your@email.com
 ```
 

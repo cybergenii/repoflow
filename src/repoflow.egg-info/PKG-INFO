@@ -2,8 +2,8 @@ Metadata-Version: 2.4
 Name: repoflow
 Version: 1.0.0
 Summary: A comprehensive GitHub repository management tool with CLI and Web UI support
-Author-email: Your Name <your.email@example.com>
-Maintainer-email: Your Name <your.email@example.com>
+Author-email: Your Name cybersgenii@gmail.com
+Maintainer-email: Your Name cybersgenii@gmail.com
 License: MIT
 Project-URL: Homepage, https://github.com/cybergenii/repoflow
 Project-URL: Documentation, https://github.com/cybergenii/repoflow#readme
