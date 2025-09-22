@@ -22,14 +22,14 @@ describe('Config Utils', () => {
       
       expect(config).toEqual({
         github: {
-          token: process.env.GITHUB_TOKEN || '',
-          username: process.env.GITHUB_USERNAME || '',
-          email: process.env.GITHUB_EMAIL || ''
+          token: process.env['GITHUB_TOKEN'] || '',
+          username: process.env['GITHUB_USERNAME'] || '',
+          email: process.env['GITHUB_EMAIL'] || ''
         },
         defaultBranch: 'main',
         defaultAuthor: {
-          name: process.env.GIT_USER_NAME || '',
-          email: process.env.GIT_USER_EMAIL || ''
+          name: process.env['GIT_USER_NAME'] || '',
+          email: process.env['GIT_USER_EMAIL'] || ''
         }
       });
     });

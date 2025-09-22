@@ -30,7 +30,7 @@ export class GitService {
   }
 
   async commit(options: CommitOptions): Promise<void> {
-    const { message, date, author, multiple, spread, backdate, force } = options;
+    const { message, date, author, multiple, spread, force } = options;
     
     if (!message) {
       throw new Error('Commit message is required');
@@ -48,11 +48,11 @@ export class GitService {
       return;
     }
 
-    // Set commit date if provided
-    if (date) {
-      process.env.GIT_AUTHOR_DATE = date;
-      process.env.GIT_COMMITTER_DATE = date;
-    }
+        // Set commit date if provided
+        if (date) {
+          process.env['GIT_AUTHOR_DATE'] = date;
+          process.env['GIT_COMMITTER_DATE'] = date;
+        }
 
     try {
       if (force) {
@@ -60,11 +60,11 @@ export class GitService {
       } else {
         await this.runCommand(`git commit -m "${message}"`);
       }
-    } finally {
-      // Clean up environment variables
-      delete process.env.GIT_AUTHOR_DATE;
-      delete process.env.GIT_COMMITTER_DATE;
-    }
+        } finally {
+          // Clean up environment variables
+          delete process.env['GIT_AUTHOR_DATE'];
+          delete process.env['GIT_COMMITTER_DATE'];
+        }
   }
 
   async push(options: PushOptions): Promise<void> {
@@ -137,11 +137,11 @@ export class GitService {
         .map(line => {
           const [hash, message, author, date, committerDate] = line.split('|');
           return {
-            hash,
-            message,
-            author,
-            date,
-            committerDate
+            hash: hash || '',
+            message: message || '',
+            author: author || '',
+            date: date || '',
+            committerDate: committerDate || ''
           };
         });
     } catch (error) {
@@ -166,14 +166,14 @@ export class GitService {
       
       const message = i === 0 ? baseMessage : `${baseMessage} (part ${i + 1}/${count})`;
       
-      process.env.GIT_AUTHOR_DATE = isoDate;
-      process.env.GIT_COMMITTER_DATE = isoDate;
+          process.env['GIT_AUTHOR_DATE'] = isoDate;
+          process.env['GIT_COMMITTER_DATE'] = isoDate;
       
       try {
         await this.runCommand(`git commit --allow-empty -m "${message}"`);
       } finally {
-        delete process.env.GIT_AUTHOR_DATE;
-        delete process.env.GIT_COMMITTER_DATE;
+        delete process.env['GIT_AUTHOR_DATE'];
+        delete process.env['GIT_COMMITTER_DATE'];
       }
     }
   }
@@ -192,6 +192,6 @@ export class GitService {
 
   private extractRepoName(url: string): string {
     const match = url.match(/github\.com\/[^\/]+\/([^\/]+?)(?:\.git)?$/);
-    return match ? match[1] : 'unknown';
+    return match?.[1] || 'unknown';
   }
 }

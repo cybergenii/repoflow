@@ -12,7 +12,7 @@ export interface CommitOptions {
   author?: {
     name: string;
     email: string;
-  };
+  } | undefined;
   multiple?: number;
   spread?: number; // hours
   backdate?: boolean;

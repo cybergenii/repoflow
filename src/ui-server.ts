@@ -9,7 +9,7 @@ import { UIOptions } from './types';
 import { loadConfig } from './utils/config';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env['PORT'] || 3000;
 
 // Middleware
 app.use(cors());
@@ -19,22 +19,21 @@ app.use(express.static(path.join(__dirname, '../ui/dist')));
 // API Routes
 app.get('/api/status', async (req, res) => {
   try {
-    const config = await loadConfig();
-    const git = new GitService(req.query.dir as string || process.cwd());
+    const git = new GitService((req.query['dir'] as string) || process.cwd());
     const status = await git.getStatus();
     res.json({ success: true, data: status });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
 app.get('/api/commits', async (req, res) => {
   try {
-    const git = new GitService(req.query.dir as string || process.cwd());
-    const count = parseInt(req.query.count as string) || 10;
+    const git = new GitService((req.query['dir'] as string) || process.cwd());
+    const count = parseInt((req.query['count'] as string) || '10') || 10;
     const commits = await git.getCommits(count);
     res.json({ success: true, data: commits });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -45,7 +44,7 @@ app.post('/api/create-repo', async (req, res) => {
     const github = new GitHubService(config.github);
     const result = await github.createRepository(req.body);
     res.json(result);
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -59,7 +58,7 @@ app.post('/api/commit', async (req, res) => {
     await git.commit(options);
     
     res.json({ success: true, message: 'Commit created successfully' });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -72,7 +71,7 @@ app.post('/api/push', async (req, res) => {
     await git.push(options);
     
     res.json({ success: true, message: 'Push completed successfully' });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -83,13 +82,13 @@ app.post('/api/validate-token', async (req, res) => {
     const github = new GitHubService({ token });
     const isValid = await github.validateToken();
     res.json({ success: true, valid: isValid });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
 // Serve UI
-app.get('*', (req, res) => {
+app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, '../ui/dist/index.html'));
 });
 
@@ -97,7 +96,7 @@ export async function startUIServer(options: UIOptions = {}): Promise<void> {
   const port = options.port || PORT;
   const host = options.host || 'localhost';
   
-  app.listen(port, host, () => {
+  app.listen(Number(port), host, () => {
     console.log(`🚀 RepoFlow UI server running at http://${host}:${port}`);
     
     if (options.open) {

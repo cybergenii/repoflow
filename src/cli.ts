@@ -29,17 +29,17 @@ program
     const spinner = ora('Configuring RepoFlow...').start();
     
     try {
-      const config: RepoFlowConfig = {
-        github: {
-          token: options.token || process.env.GITHUB_TOKEN || '',
-          username: options.username,
-          email: options.email
-        },
-        defaultAuthor: {
-          name: options.name || '',
-          email: options.email || ''
-        }
-      };
+          const config: RepoFlowConfig = {
+            github: {
+              token: options.token || process.env['GITHUB_TOKEN'] || '',
+              username: options.username,
+              email: options.email
+            },
+            defaultAuthor: {
+              name: options.name || '',
+              email: options.email || ''
+            }
+          };
 
       await saveConfig(config);
       spinner.succeed('Configuration saved successfully!');
@@ -107,23 +107,22 @@ program
   .action(async (options) => {
     const spinner = ora('Pushing changes...').start();
     
-    try {
-      const config = await loadConfig();
-      const github = new GitHubService(config.github);
-      const git = new GitService(options.dir || process.cwd());
+        try {
+          const config = await loadConfig();
+          const git = new GitService(options.dir || process.cwd());
       
       // Generate commit message if not provided
       const message = options.message || await generateCommitMessage(options.dir || process.cwd());
       
-      const commitOptions: CommitOptions = {
-        message,
-        date: options.date,
-        author: config.defaultAuthor,
-        multiple: options.multiple,
-        spread: options.spread,
-        backdate: options.backdate,
-        force: options.force
-      };
+          const commitOptions: CommitOptions = {
+            message,
+            date: options.date || undefined,
+            author: config.defaultAuthor || undefined,
+            multiple: options.multiple || undefined,
+            spread: options.spread || undefined,
+            backdate: options.backdate || undefined,
+            force: options.force || undefined
+          };
 
       // Add and commit changes
       await git.addFiles();

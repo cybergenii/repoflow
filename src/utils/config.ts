@@ -15,14 +15,14 @@ export async function loadConfig(): Promise<RepoFlowConfig> {
     // Return default config if file doesn't exist
     return {
       github: {
-        token: process.env.GITHUB_TOKEN || '',
-        username: process.env.GITHUB_USERNAME || '',
-        email: process.env.GITHUB_EMAIL || ''
+        token: process.env['GITHUB_TOKEN'] || '',
+        username: process.env['GITHUB_USERNAME'] || '',
+        email: process.env['GITHUB_EMAIL'] || ''
       },
       defaultBranch: 'main',
       defaultAuthor: {
-        name: process.env.GIT_USER_NAME || '',
-        email: process.env.GIT_USER_EMAIL || ''
+        name: process.env['GIT_USER_NAME'] || '',
+        email: process.env['GIT_USER_EMAIL'] || ''
       }
     };
   }

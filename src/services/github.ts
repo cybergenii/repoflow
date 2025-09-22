@@ -3,10 +3,8 @@ import { GitHubConfig, RepoConfig, ScriptResult } from '../types';
 
 export class GitHubService {
   private client: AxiosInstance;
-  private config: GitHubConfig;
 
   constructor(config: GitHubConfig) {
-    this.config = config;
     this.client = axios.create({
       baseURL: 'https://api.github.com',
       headers: {
@@ -98,8 +96,8 @@ export class GitHubService {
     const match = url.match(/github\.com\/([^\/]+)\/([^\/]+?)(?:\.git)?$/);
     if (match) {
       return {
-        owner: match[1],
-        repo: match[2]
+        owner: match[1] || '',
+        repo: match[2] || ''
       };
     }
     return null;

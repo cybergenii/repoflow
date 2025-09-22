@@ -56,14 +56,14 @@ export async function generateCommitMessage(directory: string): Promise<string> 
     }
   } catch (error) {
     // Fallback to random template
-    const randomTemplate = COMMIT_TEMPLATES[Math.floor(Math.random() * COMMIT_TEMPLATES.length)];
-    return randomTemplate;
+  const randomTemplate = COMMIT_TEMPLATES[Math.floor(Math.random() * COMMIT_TEMPLATES.length)];
+  return randomTemplate || 'Update project';
   }
 }
 
 export function generateVariedCommitMessage(
   commitNumber: number,
-  totalCommits: number,
+  _totalCommits: number,
   baseMessage: string,
   projectName: string
 ): string {
@@ -74,5 +74,5 @@ export function generateVariedCommitMessage(
   const templateIndex = (commitNumber - 1) % COMMIT_TEMPLATES.length;
   const template = COMMIT_TEMPLATES[templateIndex];
   
-  return projectName ? `${template} for ${projectName}` : template;
+  return projectName ? `${template} for ${projectName}` : (template || 'Update project');
 }
