@@ -2,6 +2,9 @@ README.md
 pyproject.toml
 src/repoflow/__init__.py
 src/repoflow/cli.py
+src/repoflow/config.py
+src/repoflow/git_service.py
+src/repoflow/github_service.py
 src/repoflow.egg-info/PKG-INFO
 src/repoflow.egg-info/SOURCES.txt
 src/repoflow.egg-info/dependency_links.txt

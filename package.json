@@ -44,7 +44,7 @@
   },
   "homepage": "https://github.com/cybergenii/repoflow#readme",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "commander": "^11.1.0",
