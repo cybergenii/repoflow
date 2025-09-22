@@ -4,9 +4,9 @@
   "description": "Web UI for RepoFlow - GitHub repository management tool",
   "private": true,
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
+    "dev": "npx vite",
+    "build": "npx vite build",
+    "preview": "npx vite preview",
     "lint": "eslint . --ext .js,.ts,.jsx,.tsx --fix"
   },
   "dependencies": {

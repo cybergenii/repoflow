@@ -64,6 +64,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install build twine
         pip install -e .
+        pip install pytest pytest-cov
     
     - name: Run tests
       run: python -m pytest tests/
