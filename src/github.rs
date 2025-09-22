@@ -21,10 +21,15 @@ pub async fn create_repository(
                 .join("config.json");
             
             if config_path.exists() {
-                let config: serde_json::Value = serde_json::from_str(
-                    &std::fs::read_to_string(config_path)?
-                )?;
-                Ok(config["github"]["token"].as_str().unwrap_or("").to_string())
+                match std::fs::read_to_string(config_path) {
+                    Ok(content) => {
+                        match serde_json::from_str::<serde_json::Value>(&content) {
+                            Ok(config) => Ok(config["github"]["token"].as_str().unwrap_or("").to_string()),
+                            Err(_) => Err(std::env::VarError::NotPresent),
+                        }
+                    }
+                    Err(_) => Err(std::env::VarError::NotPresent),
+                }
             } else {
                 Err(std::env::VarError::NotPresent)
             }

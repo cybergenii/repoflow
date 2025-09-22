@@ -78,7 +78,7 @@ async fn handle_commits() -> Result<impl warp::Reply, warp::Rejection> {
     })))
 }
 
-async fn handle_create_repo(body: serde_json::Value) -> Result<impl warp::Reply, warp::Rejection> {
+async fn handle_create_repo(_body: serde_json::Value) -> Result<impl warp::Reply, warp::Rejection> {
     // TODO: Implement repository creation
     Ok(warp::reply::json(&serde_json::json!({
         "success": true,
@@ -86,7 +86,7 @@ async fn handle_create_repo(body: serde_json::Value) -> Result<impl warp::Reply,
     })))
 }
 
-async fn handle_commit(body: serde_json::Value) -> Result<impl warp::Reply, warp::Rejection> {
+async fn handle_commit(_body: serde_json::Value) -> Result<impl warp::Reply, warp::Rejection> {
     // TODO: Implement commit creation
     Ok(warp::reply::json(&serde_json::json!({
         "success": true,
@@ -94,7 +94,7 @@ async fn handle_commit(body: serde_json::Value) -> Result<impl warp::Reply, warp
     })))
 }
 
-async fn handle_push(body: serde_json::Value) -> Result<impl warp::Reply, warp::Rejection> {
+async fn handle_push(_body: serde_json::Value) -> Result<impl warp::Reply, warp::Rejection> {
     // TODO: Implement push
     Ok(warp::reply::json(&serde_json::json!({
         "success": true,
@@ -102,7 +102,7 @@ async fn handle_push(body: serde_json::Value) -> Result<impl warp::Reply, warp::
     })))
 }
 
-async fn handle_validate_token(body: serde_json::Value) -> Result<impl warp::Reply, warp::Rejection> {
+async fn handle_validate_token(_body: serde_json::Value) -> Result<impl warp::Reply, warp::Rejection> {
     // TODO: Implement token validation
     Ok(warp::reply::json(&serde_json::json!({
         "success": true,

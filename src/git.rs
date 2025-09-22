@@ -1,10 +1,9 @@
 use anyhow::Result;
 use std::path::PathBuf;
-use std::process::Command;
 use tokio::process::Command as AsyncCommand;
 
 pub async fn push_changes(
-    repo: Option<String>,
+    _repo: Option<String>,
     message: Option<String>,
     date: Option<String>,
     branch: Option<String>,
