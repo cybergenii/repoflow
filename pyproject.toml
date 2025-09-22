@@ -63,6 +63,10 @@ dev = [
     "build>=1.0.0",
     "twine>=4.0.0",
 ]
+test = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/cybergenii/repoflow"

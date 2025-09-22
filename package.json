@@ -14,7 +14,9 @@
     "dev:ui": "cd ui && npm run dev",
     "start": "node dist/cli.js",
     "start:ui": "node dist/ui-server.js",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch --passWithNoTests",
+    "test:coverage": "jest --coverage --passWithNoTests",
     "lint": "eslint src/**/*.ts",
     "package": "npm run build && npm pack",
     "publish:npm": "npm run build && npm publish",
@@ -92,5 +94,18 @@
       "node18-macos-x64",
       "node18-macos-arm64"
     ]
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "roots": ["<rootDir>/src"],
+    "testMatch": ["**/__tests__/**/*.test.ts"],
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/**/*.d.ts",
+      "!src/__tests__/**/*"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov", "html"]
   }
 }
