@@ -34,7 +34,7 @@ repoflow --help
 ```
 
 ### Pre-built Executables
-Download from [Releases](https://github.com/yourusername/repoflow/releases) and run the appropriate installer for your platform.
+Download from [Releases](https://github.com/cybergenii/repoflow/releases) and run the appropriate installer for your platform.
 
 ## 📦 Installation
 
@@ -62,13 +62,13 @@ pipx install repoflow
 cargo install repoflow
 
 # Or build from source
-git clone https://github.com/yourusername/repoflow.git
+git clone https://github.com/cybergenii/repoflow.git
 cd repoflow
 cargo build --release
 ```
 
 ### Pre-built Executables
-1. Download the appropriate executable for your platform from [Releases](https://github.com/yourusername/repoflow/releases)
+1. Download the appropriate executable for your platform from [Releases](https://github.com/cybergenii/repoflow/releases)
 2. Run the installer script:
    - **Windows**: `install-windows.bat`
    - **Linux**: `./install-linux.sh`
@@ -202,7 +202,7 @@ repoflow push --force --message "Update repository"
 
 #### TypeScript/JavaScript
 ```bash
-git clone https://github.com/yourusername/repoflow.git
+git clone https://github.com/cybergenii/repoflow.git
 cd repoflow
 npm install
 npm run build
@@ -211,14 +211,14 @@ npm run dev
 
 #### Python
 ```bash
-git clone https://github.com/yourusername/repoflow.git
+git clone https://github.com/cybergenii/repoflow.git
 cd repoflow
 pip install -e .
 ```
 
 #### Rust
 ```bash
-git clone https://github.com/yourusername/repoflow.git
+git clone https://github.com/cybergenii/repoflow.git
 cd repoflow
 cargo build --release
 ```
@@ -266,19 +266,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/repoflow/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/repoflow/discussions)
-- **Documentation**: [Wiki](https://github.com/yourusername/repoflow/wiki)
+- **Issues**: [GitHub Issues](https://github.com/cybergenii/repoflow/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/cybergenii/repoflow/discussions)
+- **Documentation**: [Wiki](https://github.com/cybergenii/repoflow/wiki)
 
 ## 🔗 Links
 
-- **Homepage**: https://github.com/yourusername/repoflow
+- **Homepage**: https://github.com/cybergenii/repoflow
 - **NPM Package**: https://www.npmjs.com/package/repoflow
 - **PyPI Package**: https://pypi.org/project/repoflow/
 - **Crates.io**: https://crates.io/crates/repoflow
 
 ---
 
-Made with ❤️ by [Your Name](https://github.com/yourusername)# repoflow
-# repoflow
-# repoflow
+Made with ❤️ by [cybergenii](https://github.com/cybergenii)
