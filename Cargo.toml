@@ -1,0 +1,77 @@
+[package]
+name = "repoflow"
+version = "1.0.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "A comprehensive GitHub repository management tool with CLI and Web UI support"
+license = "MIT"
+repository = "https://github.com/yourusername/repoflow"
+homepage = "https://github.com/yourusername/repoflow"
+documentation = "https://github.com/yourusername/repoflow#readme"
+keywords = ["github", "git", "repository", "automation", "cli", "management"]
+categories = ["command-line-utilities", "development-tools"]
+
+[[bin]]
+name = "repoflow"
+path = "src/main.rs"
+
+[[bin]]
+name = "repoflow-ui"
+path = "src/ui_server.rs"
+
+[dependencies]
+# Core dependencies
+tokio = { version = "1.35", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+thiserror = "1.0"
+
+# CLI dependencies
+clap = { version = "4.4", features = ["derive", "color", "suggestions"] }
+dialoguer = "0.11"
+console = "0.15"
+indicatif = "0.17"
+
+# HTTP client
+reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
+
+# Git operations
+git2 = "0.18"
+
+# Web server
+warp = "0.3"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "fs"] }
+
+# File operations
+walkdir = "2.4"
+zip = "0.6"
+
+# Date/time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Environment
+dotenv = "0.15"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# Async runtime
+futures = "0.3"
+
+[dev-dependencies]
+tokio-test = "0.4"
+mockito = "1.2"
+tempfile = "3.8"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+debug = true
+opt-level = 0

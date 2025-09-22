@@ -1,0 +1,96 @@
+{
+  "name": "repoflow",
+  "version": "1.0.0",
+  "description": "A comprehensive GitHub repository management tool with CLI and Web UI support",
+  "main": "dist/index.js",
+  "bin": {
+    "repoflow": "dist/cli.js",
+    "repoflow-ui": "dist/ui-server.js"
+  },
+  "scripts": {
+    "build": "tsc && npm run build:ui",
+    "build:ui": "cd ui && npm run build",
+    "dev": "concurrently \"tsc -w\" \"npm run dev:ui\"",
+    "dev:ui": "cd ui && npm run dev",
+    "start": "node dist/cli.js",
+    "start:ui": "node dist/ui-server.js",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "package": "npm run build && npm pack",
+    "publish:npm": "npm run build && npm publish",
+    "publish:github": "npm run build && gh release create"
+  },
+  "keywords": [
+    "github",
+    "git",
+    "repository",
+    "automation",
+    "cli",
+    "management",
+    "commit",
+    "push",
+    "backdate"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/repoflow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/repoflow/issues"
+  },
+  "homepage": "https://github.com/yourusername/repoflow#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "commander": "^11.1.0",
+    "inquirer": "^9.2.12",
+    "axios": "^1.6.2",
+    "chalk": "^5.3.0",
+    "ora": "^7.0.1",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "multer": "^1.4.5-lts.1",
+    "archiver": "^6.0.1",
+    "node-cron": "^3.0.3",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/multer": "^1.4.11",
+    "@types/archiver": "^6.0.2",
+    "@types/inquirer": "^9.0.7",
+    "typescript": "^5.3.2",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.8",
+    "ts-jest": "^29.1.1",
+    "eslint": "^8.55.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.1",
+    "@typescript-eslint/parser": "^6.13.1",
+    "concurrently": "^8.2.2",
+    "pkg": "^5.8.1"
+  },
+  "files": [
+    "dist/",
+    "ui/dist/",
+    "scripts/",
+    "README.md",
+    "LICENSE"
+  ],
+  "pkg": {
+    "assets": [
+      "ui/dist/**/*",
+      "scripts/**/*"
+    ],
+    "targets": [
+      "node18-win-x64",
+      "node18-linux-x64",
+      "node18-macos-x64",
+      "node18-macos-arm64"
+    ]
+  }
+}
