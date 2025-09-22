@@ -1,0 +1,3 @@
+[console_scripts]
+repoflow = repoflow.cli:main
+repoflow-ui = repoflow.ui.server:main
