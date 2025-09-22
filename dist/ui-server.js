@@ -66,7 +66,7 @@ app.post('/api/push', async (req, res) => {
     try {
         const { directory, options } = req.body;
         const git = new git_1.GitService(directory || process.cwd());
-        await git.push(options);
+        await git.push('origin', 'main', options);
         res.json({ success: true, message: 'Push completed successfully' });
     }
     catch (error) {

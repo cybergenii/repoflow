@@ -55,6 +55,9 @@ export interface RepoStatus {
   unpushedCommits: number;
   hasChanges: boolean;
   stagedFiles: number;
+  staged: string[];
+  modified: string[];
+  untracked: string[];
 }
 
 export interface CommitInfo {

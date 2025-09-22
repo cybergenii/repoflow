@@ -1,23 +1,63 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { CommitInfo, CommitOptions, PushOptions, RepoStatus } from '../types';
+import { CommitInfo, CommitOptions, RepoStatus } from '../types';
 
 const execAsync = promisify(exec);
 
 export class GitService {
   private workingDir: string;
 
-  constructor(workingDir: string) {
-    this.workingDir = workingDir;
+  constructor(workingDir?: string) {
+    this.workingDir = workingDir || process.cwd();
+  }
+
+  // New methods for enhanced CLI
+  async init(): Promise<void> {
+    await this.runCommand('git init');
+  }
+
+  async addRemote(name: string, url: string): Promise<void> {
+    await this.runCommand(`git remote add ${name} ${url}`);
+  }
+
+  async addAll(): Promise<void> {
+    await this.runCommand('git add -A');
+  }
+
+  async setUser(name: string, email: string): Promise<void> {
+    await this.runCommand(`git config user.name "${name}"`);
+    await this.runCommand(`git config user.email "${email}"`);
+  }
+
+  async push(remote: string, branch: string, options: { force?: boolean } = {}): Promise<void> {
+    let command = `git push ${remote} ${branch}`;
+    if (options.force) {
+      command += ' --force';
+    }
+    await this.runCommand(command);
+  }
+
+  async getRemotes(): Promise<Record<string, string>> {
+    try {
+      const { stdout } = await this.runCommand('git remote -v');
+      const remotes: Record<string, string> = {};
+      
+      stdout.split('\n').forEach(line => {
+        const match = line.match(/^(\w+)\s+(.+?)\s+\(fetch\)$/);
+        if (match && match[1] && match[2]) {
+          remotes[match[1]] = match[2];
+        }
+      });
+      
+      return remotes;
+    } catch {
+      return {};
+    }
   }
 
   async initRepository(branch: string = 'main'): Promise<void> {
     await this.runCommand('git init');
     await this.runCommand(`git branch -M ${branch}`);
-  }
-
-  async addRemote(name: string, url: string): Promise<void> {
-    await this.runCommand(`git remote add ${name} ${url}`);
   }
 
   async setRemoteUrl(name: string, url: string): Promise<void> {
@@ -67,23 +107,6 @@ export class GitService {
         }
   }
 
-  async push(options: PushOptions): Promise<void> {
-    const { branch = 'main', force = false, upstream = false } = options;
-    
-    let command = 'git push';
-    
-    if (upstream) {
-      command += ` --set-upstream origin ${branch}`;
-    } else {
-      command += ` origin ${branch}`;
-    }
-    
-    if (force) {
-      command += ' --force';
-    }
-
-    await this.runCommand(command);
-  }
 
   async getStatus(): Promise<RepoStatus> {
     try {
@@ -91,8 +114,13 @@ export class GitService {
       const { stdout: branchOutput } = await this.runCommand('git branch --show-current');
       const { stdout: remoteUrl } = await this.runCommand('git remote get-url origin');
       
-      const stagedFiles = statusOutput.split('\n').filter(line => line.startsWith('A')).length;
-      const hasChanges = statusOutput.length > 0;
+      const lines = statusOutput.split('\n').filter(line => line.trim());
+      const staged = lines.filter(line => line.startsWith('A')).map(line => line.substring(3));
+      const modified = lines.filter(line => line.startsWith('M')).map(line => line.substring(3));
+      const untracked = lines.filter(line => line.startsWith('??')).map(line => line.substring(3));
+      
+      const stagedFiles = staged.length;
+      const hasChanges = lines.length > 0;
       
       // Get last commit info
       let lastCommit = '';
@@ -119,7 +147,10 @@ export class GitService {
         lastCommit,
         unpushedCommits,
         hasChanges,
-        stagedFiles
+        stagedFiles,
+        staged,
+        modified,
+        untracked
       };
     } catch (error) {
       throw new Error(`Failed to get repository status: ${error}`);

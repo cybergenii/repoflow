@@ -6,14 +6,48 @@ const util_1 = require("util");
 const execAsync = (0, util_1.promisify)(child_process_1.exec);
 class GitService {
     constructor(workingDir) {
-        this.workingDir = workingDir;
+        this.workingDir = workingDir || process.cwd();
+    }
+    // New methods for enhanced CLI
+    async init() {
+        await this.runCommand('git init');
+    }
+    async addRemote(name, url) {
+        await this.runCommand(`git remote add ${name} ${url}`);
+    }
+    async addAll() {
+        await this.runCommand('git add -A');
+    }
+    async setUser(name, email) {
+        await this.runCommand(`git config user.name "${name}"`);
+        await this.runCommand(`git config user.email "${email}"`);
+    }
+    async push(remote, branch, options = {}) {
+        let command = `git push ${remote} ${branch}`;
+        if (options.force) {
+            command += ' --force';
+        }
+        await this.runCommand(command);
+    }
+    async getRemotes() {
+        try {
+            const { stdout } = await this.runCommand('git remote -v');
+            const remotes = {};
+            stdout.split('\n').forEach(line => {
+                const match = line.match(/^(\w+)\s+(.+?)\s+\(fetch\)$/);
+                if (match && match[1] && match[2]) {
+                    remotes[match[1]] = match[2];
+                }
+            });
+            return remotes;
+        }
+        catch {
+            return {};
+        }
     }
     async initRepository(branch = 'main') {
         await this.runCommand('git init');
         await this.runCommand(`git branch -M ${branch}`);
-    }
-    async addRemote(name, url) {
-        await this.runCommand(`git remote add ${name} ${url}`);
     }
     async setRemoteUrl(name, url) {
         await this.runCommand(`git remote set-url ${name} ${url}`);
@@ -56,27 +90,17 @@ class GitService {
             delete process.env['GIT_COMMITTER_DATE'];
         }
     }
-    async push(options) {
-        const { branch = 'main', force = false, upstream = false } = options;
-        let command = 'git push';
-        if (upstream) {
-            command += ` --set-upstream origin ${branch}`;
-        }
-        else {
-            command += ` origin ${branch}`;
-        }
-        if (force) {
-            command += ' --force';
-        }
-        await this.runCommand(command);
-    }
     async getStatus() {
         try {
             const { stdout: statusOutput } = await this.runCommand('git status --porcelain');
             const { stdout: branchOutput } = await this.runCommand('git branch --show-current');
             const { stdout: remoteUrl } = await this.runCommand('git remote get-url origin');
-            const stagedFiles = statusOutput.split('\n').filter(line => line.startsWith('A')).length;
-            const hasChanges = statusOutput.length > 0;
+            const lines = statusOutput.split('\n').filter(line => line.trim());
+            const staged = lines.filter(line => line.startsWith('A')).map(line => line.substring(3));
+            const modified = lines.filter(line => line.startsWith('M')).map(line => line.substring(3));
+            const untracked = lines.filter(line => line.startsWith('??')).map(line => line.substring(3));
+            const stagedFiles = staged.length;
+            const hasChanges = lines.length > 0;
             // Get last commit info
             let lastCommit = '';
             try {
@@ -102,7 +126,10 @@ class GitService {
                 lastCommit,
                 unpushedCommits,
                 hasChanges,
-                stagedFiles
+                stagedFiles,
+                staged,
+                modified,
+                untracked
             };
         }
         catch (error) {

@@ -4,8 +4,8 @@
 # Usage: ./script.sh [-d directory] [-r repo_name_or_url] [-m message] [-t date] [-p private] [--backdate]
 
 # Configuration - EDIT THESE
-USER_NAME="chrizfasa424"
-USER_EMAIL="chrizfaza@gmail.com"
+USER_NAME="cybergenii"
+USER_EMAIL="cybersgenii@gmail.com"
 BRANCH="main"
 
 # Get token from environment variable

@@ -7,39 +7,45 @@ exports.GitHubService = void 0;
 const axios_1 = __importDefault(require("axios"));
 class GitHubService {
     constructor(config) {
+        const token = config?.token || process.env['GITHUB_TOKEN'] || process.env['TOKEN'];
+        if (!token) {
+            throw new Error('GitHub token is required');
+        }
         this.client = axios_1.default.create({
             baseURL: 'https://api.github.com',
             headers: {
-                'Authorization': `token ${config.token}`,
+                'Authorization': `token ${token}`,
                 'Accept': 'application/vnd.github.v3+json',
                 'User-Agent': 'RepoFlow/1.0.0'
             }
         });
     }
-    async createRepository(repoConfig) {
+    // New method for enhanced CLI
+    async createRepository(name, isPrivate = false) {
         try {
             const response = await this.client.post('/user/repos', {
-                name: repoConfig.name,
-                description: repoConfig.description || '',
-                private: repoConfig.private || false,
+                name,
+                private: isPrivate,
                 auto_init: false
             });
-            return {
-                success: true,
-                message: `Repository '${repoConfig.name}' created successfully`,
-                data: {
-                    cloneUrl: response.data.clone_url,
-                    sshUrl: response.data.ssh_url,
-                    htmlUrl: response.data.html_url
-                }
-            };
+            return response.data.clone_url;
         }
         catch (error) {
-            return {
-                success: false,
-                message: `Failed to create repository: ${error.response?.data?.message || error.message}`,
-                error: error.message
-            };
+            if (error.response?.data?.message?.includes('already exists')) {
+                // Repository already exists, return constructed URL
+                const username = await this.getUsername();
+                return `https://github.com/${username}/${name}.git`;
+            }
+            throw new Error(`Failed to create repository: ${error.response?.data?.message || error.message}`);
+        }
+    }
+    async getUsername() {
+        try {
+            const response = await this.client.get('/user');
+            return response.data.login;
+        }
+        catch (error) {
+            throw new Error('Failed to get GitHub username');
         }
     }
     async getRepository(owner, repo) {

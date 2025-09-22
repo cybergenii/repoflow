@@ -33,239 +33,548 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.program = void 0;
-const chalk_1 = __importDefault(require("chalk"));
 const commander_1 = require("commander");
-const inquirer_1 = __importDefault(require("inquirer"));
-const ora_1 = __importDefault(require("ora"));
 const git_1 = require("./services/git");
 const github_1 = require("./services/github");
-const commit_messages_1 = require("./utils/commit-messages");
 const config_1 = require("./utils/config");
+const fs = __importStar(require("fs"));
+const path = __importStar(require("path"));
 const program = new commander_1.Command();
-exports.program = program;
-const fs_1 = require("fs");
-const path_1 = require("path");
-const packageJson = JSON.parse((0, fs_1.readFileSync)((0, path_1.join)(__dirname, '../package.json'), 'utf-8'));
+const gitService = new git_1.GitService();
+const githubService = new github_1.GitHubService();
+const configService = new config_1.ConfigService();
+// Load package.json for version
+const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8'));
 program
-    .name('repoflow')
-    .description('A comprehensive GitHub repository management tool')
+    .name('repoflow-js')
+    .description('Advanced GitHub Repository Manager with Commit Graph Manipulation')
     .version(packageJson.version);
-// Configure command
+// Auto-push command with all advanced features
+program
+    .command('auto')
+    .description('Automatically detect directory, create repo if needed, and push with advanced features')
+    .option('-d, --dir <directory>', 'Target directory (default: current directory)')
+    .option('-r, --repo <name_or_url>', 'Repository name or full URL')
+    .option('-m, --message <message>', 'Commit message (auto-generated if not provided)')
+    .option('-t, --date <date>', 'Commit date (format: YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)')
+    .option('-p, --private', 'Create private repository (only for new repos)')
+    .option('-f, --force', 'Force commit even if no changes detected')
+    .option('--backdate', 'Enable advanced backdating for commit graph manipulation')
+    .option('--multiple <count>', 'Create multiple commits for better graph presence', '1')
+    .option('--spread <hours>', 'Spread multiple commits over specified hours', '0')
+    .option('--open', 'Open browser automatically after push')
+    .action(async (options) => {
+    try {
+        await handleAutoPush(options);
+    }
+    catch (error) {
+        console.error('❌ Error:', error);
+        process.exit(1);
+    }
+});
+// Enhanced create command
+program
+    .command('create')
+    .description('Create a new repository with advanced options')
+    .argument('<name>', 'Repository name')
+    .option('-p, --private', 'Create private repository')
+    .option('-d, --dir <directory>', 'Target directory (default: current directory)')
+    .option('-m, --message <message>', 'Initial commit message')
+    .option('-t, --date <date>', 'Commit date')
+    .option('--backdate', 'Enable backdating')
+    .option('--multiple <count>', 'Create multiple commits', '1')
+    .option('--spread <hours>', 'Spread commits over hours', '0')
+    .action(async (name, options) => {
+    try {
+        await handleCreate(name, options);
+    }
+    catch (error) {
+        console.error('❌ Error:', error);
+        process.exit(1);
+    }
+});
+// Enhanced push command
+program
+    .command('push')
+    .description('Push changes with advanced commit manipulation')
+    .option('-d, --dir <directory>', 'Target directory (default: current directory)')
+    .option('-m, --message <message>', 'Commit message')
+    .option('-t, --date <date>', 'Commit date')
+    .option('--backdate', 'Enable backdating')
+    .option('--multiple <count>', 'Create multiple commits', '1')
+    .option('--spread <hours>', 'Spread commits over hours', '0')
+    .option('--force', 'Force push')
+    .action(async (options) => {
+    try {
+        await handlePush(options);
+    }
+    catch (error) {
+        console.error('❌ Error:', error);
+        process.exit(1);
+    }
+});
+// Status command with enhanced info
+program
+    .command('status')
+    .description('Show detailed repository status and commit graph info')
+    .option('-d, --dir <directory>', 'Target directory (default: current directory)')
+    .action(async (options) => {
+    try {
+        await handleStatus(options);
+    }
+    catch (error) {
+        console.error('❌ Error:', error);
+        process.exit(1);
+    }
+});
+// Interactive command
+program
+    .command('interactive')
+    .description('Interactive mode for guided repository management')
+    .action(async () => {
+    try {
+        await handleInteractive();
+    }
+    catch (error) {
+        console.error('❌ Error:', error);
+        process.exit(1);
+    }
+});
+// Config command
 program
     .command('config')
     .description('Configure RepoFlow settings')
-    .option('-t, --token <token>', 'GitHub personal access token')
-    .option('-u, --username <username>', 'GitHub username')
-    .option('-e, --email <email>', 'Git email address')
-    .option('-n, --name <name>', 'Git user name')
-    .action(async (options) => {
-    const spinner = (0, ora_1.default)('Configuring RepoFlow...').start();
-    try {
-        const config = {
-            github: {
-                token: options.token || process.env['GITHUB_TOKEN'] || '',
-                username: options.username,
-                email: options.email
-            },
-            defaultAuthor: {
-                name: options.name || '',
-                email: options.email || ''
-            }
-        };
-        await (0, config_1.saveConfig)(config);
-        spinner.succeed('Configuration saved successfully!');
-    }
-    catch (error) {
-        spinner.fail(`Configuration failed: ${error}`);
-        process.exit(1);
-    }
-});
-// Create repository command
-program
-    .command('create <name>')
-    .description('Create a new GitHub repository')
-    .option('-d, --description <description>', 'Repository description')
-    .option('-p, --private', 'Create private repository')
-    .option('--dir <directory>', 'Target directory (default: current)')
-    .action(async (name, options) => {
-    const spinner = (0, ora_1.default)('Creating repository...').start();
-    try {
-        const config = await (0, config_1.loadConfig)();
-        const github = new github_1.GitHubService(config.github);
-        const repoConfig = {
-            name,
-            description: options.description,
-            private: options.private
-        };
-        const result = await github.createRepository(repoConfig);
-        if (result.success) {
-            spinner.succeed(`Repository created: ${result.data.htmlUrl}`);
-            // Initialize local repository if directory is specified
-            if (options.dir) {
-                const git = new git_1.GitService(options.dir);
-                await git.initRepository();
-                await git.addRemote('origin', result.data.cloneUrl);
-                console.log(chalk_1.default.green(`Local repository initialized in ${options.dir}`));
-            }
-        }
-        else {
-            spinner.fail(result.message);
-            process.exit(1);
-        }
-    }
-    catch (error) {
-        spinner.fail(`Failed to create repository: ${error}`);
-        process.exit(1);
-    }
-});
-// Push command
-program
-    .command('push')
-    .description('Push changes to GitHub repository')
-    .option('-r, --repo <repo>', 'Repository name or URL')
-    .option('-m, --message <message>', 'Commit message')
-    .option('-d, --date <date>', 'Commit date (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)')
-    .option('-b, --branch <branch>', 'Branch name (default: main)')
-    .option('--multiple <count>', 'Create multiple commits', parseInt)
-    .option('--spread <hours>', 'Spread commits over hours', parseInt)
-    .option('--backdate', 'Enable backdating')
-    .option('--force', 'Force commit even if no changes')
-    .option('--dir <directory>', 'Target directory (default: current)')
-    .action(async (options) => {
-    const spinner = (0, ora_1.default)('Pushing changes...').start();
-    try {
-        const config = await (0, config_1.loadConfig)();
-        const git = new git_1.GitService(options.dir || process.cwd());
-        // Generate commit message if not provided
-        const message = options.message || await (0, commit_messages_1.generateCommitMessage)(options.dir || process.cwd());
-        const commitOptions = {
-            message,
-            date: options.date || undefined,
-            author: config.defaultAuthor || undefined,
-            multiple: options.multiple || undefined,
-            spread: options.spread || undefined,
-            backdate: options.backdate || undefined,
-            force: options.force || undefined
-        };
-        // Add and commit changes
-        await git.addFiles();
-        await git.commit(commitOptions);
-        // Push changes
-        const pushOptions = {
-            branch: options.branch,
-            force: options.backdate || (options.multiple && options.multiple > 1)
-        };
-        await git.push(pushOptions);
-        spinner.succeed('Changes pushed successfully!');
-    }
-    catch (error) {
-        spinner.fail(`Push failed: ${error}`);
-        process.exit(1);
-    }
-});
-// Status command
-program
-    .command('status')
-    .description('Show repository status')
-    .option('--dir <directory>', 'Target directory (default: current)')
+    .option('--token <token>', 'Set GitHub token')
+    .option('--username <username>', 'Set GitHub username')
+    .option('--email <email>', 'Set email address')
+    .option('--show', 'Show current configuration')
     .action(async (options) => {
     try {
-        const git = new git_1.GitService(options.dir || process.cwd());
-        const status = await git.getStatus();
-        console.log(chalk_1.default.blue('\n📊 Repository Status'));
-        console.log(chalk_1.default.gray('─'.repeat(50)));
-        console.log(`Name: ${chalk_1.default.white(status.name)}`);
-        console.log(`URL: ${chalk_1.default.blue(status.url)}`);
-        console.log(`Branch: ${chalk_1.default.green(status.branch)}`);
-        console.log(`Last Commit: ${chalk_1.default.yellow(status.lastCommit || 'None')}`);
-        console.log(`Unpushed Commits: ${chalk_1.default.cyan(status.unpushedCommits)}`);
-        console.log(`Has Changes: ${status.hasChanges ? chalk_1.default.red('Yes') : chalk_1.default.green('No')}`);
-        console.log(`Staged Files: ${chalk_1.default.magenta(status.stagedFiles)}`);
+        await handleConfig(options);
     }
     catch (error) {
-        console.error(chalk_1.default.red(`Failed to get status: ${error}`));
+        console.error('❌ Error:', error);
         process.exit(1);
     }
 });
-// Interactive mode
-program
-    .command('interactive')
-    .alias('i')
-    .description('Run RepoFlow in interactive mode')
-    .action(async () => {
-    console.log(chalk_1.default.blue('🚀 Welcome to RepoFlow Interactive Mode!'));
-    try {
-        const config = await (0, config_1.loadConfig)();
-        if (!config.github.token) {
-            console.log(chalk_1.default.yellow('⚠️  No GitHub token found. Please configure first.'));
-            const answers = await inquirer_1.default.prompt([
-                {
-                    type: 'input',
-                    name: 'token',
-                    message: 'Enter your GitHub personal access token:',
-                    validate: (input) => input.length > 0 || 'Token is required'
-                }
-            ]);
-            config.github.token = answers.token;
-            await (0, config_1.saveConfig)(config);
-        }
-        const { action } = await inquirer_1.default.prompt([
-            {
-                type: 'list',
-                name: 'action',
-                message: 'What would you like to do?',
-                choices: [
-                    { name: 'Create new repository', value: 'create' },
-                    { name: 'Push changes', value: 'push' },
-                    { name: 'Check status', value: 'status' },
-                    { name: 'Configure settings', value: 'config' },
-                    { name: 'Exit', value: 'exit' }
-                ]
-            }
-        ]);
-        if (action === 'exit') {
-            console.log(chalk_1.default.green('👋 Goodbye!'));
-            return;
-        }
-        // Execute the selected action
-        const args = process.argv.slice(0, 2);
-        args.push(action);
-        process.argv = args;
-        await program.parseAsync();
-    }
-    catch (error) {
-        console.error(chalk_1.default.red(`Interactive mode failed: ${error}`));
-        process.exit(1);
-    }
-});
-// Start UI server
+// UI command
 program
     .command('ui')
     .description('Start the web UI server')
-    .option('-p, --port <port>', 'Port number (default: 3000)', '3000')
-    .option('-h, --host <host>', 'Host address (default: localhost)', 'localhost')
+    .option('-p, --port <port>', 'Port number', '3000')
+    .option('-h, --host <host>', 'Host address', 'localhost')
     .option('--open', 'Open browser automatically')
     .action(async (options) => {
-    const { startUIServer } = await Promise.resolve().then(() => __importStar(require('./ui-server')));
-    await startUIServer({
-        port: parseInt(options.port),
-        host: options.host,
-        open: options.open
-    });
+    try {
+        await handleUI(options);
+    }
+    catch (error) {
+        console.error('❌ Error:', error);
+        process.exit(1);
+    }
 });
-// Error handling
-program.on('command:*', () => {
-    console.error(chalk_1.default.red(`Invalid command: ${program.args.join(' ')}`));
-    console.log(chalk_1.default.yellow('See --help for available commands.'));
-    process.exit(1);
-});
-// Parse command line arguments
-if (require.main === module) {
-    program.parse();
+// Helper function to convert date to Git format
+function convertToGitDate(inputDate) {
+    if (!inputDate) {
+        return new Date().toISOString();
+    }
+    // Add time if only date is provided
+    if (/^\d{4}-\d{2}-\d{2}$/.test(inputDate)) {
+        inputDate = `${inputDate} 12:00:00`;
+    }
+    try {
+        const date = new Date(inputDate);
+        return date.toISOString();
+    }
+    catch {
+        console.warn('⚠️ Date parsing failed, using current time');
+        return new Date().toISOString();
+    }
 }
+// Helper function to generate commit message
+function generateAutoCommitMessage(dir) {
+    const projectName = path.basename(dir);
+    return `🚀 Update ${projectName} project`;
+}
+// Helper function to create multiple backdated commits
+async function createBackdatedCommits(baseDate, commitCount, spreadHours, baseMessage, gitService) {
+    console.log(`🕰️ Creating ${commitCount} backdated commits over ${spreadHours} hours`);
+    const baseTimestamp = new Date(baseDate).getTime();
+    const spreadMs = spreadHours * 60 * 60 * 1000;
+    for (let i = 1; i <= commitCount; i++) {
+        const hourOffset = (i * spreadMs) / commitCount;
+        const commitTimestamp = baseTimestamp + hourOffset;
+        const commitDate = new Date(commitTimestamp).toISOString();
+        const message = `${baseMessage} (part ${i}/${commitCount})`;
+        console.log(`📝 Creating commit ${i} at ${commitDate}`);
+        try {
+            await gitService.commit({ message, date: commitDate });
+            console.log(`✅ Backdated commit ${i} created`);
+        }
+        catch (error) {
+            console.error(`❌ Failed to create backdated commit ${i}:`, error);
+            throw error;
+        }
+        // Small delay to avoid issues
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+}
+// Main auto-push handler
+async function handleAutoPush(options) {
+    const targetDir = options.dir || process.cwd();
+    const repoInput = options.repo;
+    const commitMessage = options.message;
+    const commitDate = options.date;
+    const isPrivate = options.private || false;
+    const forceCommit = options.force || false;
+    const multipleCommits = parseInt(options.multiple) || 1;
+    const spreadHours = parseInt(options.spread) || 0;
+    console.log('🚀 Starting auto-push with advanced features');
+    console.log(`📁 Target directory: ${targetDir}`);
+    // Change to target directory
+    if (targetDir !== process.cwd()) {
+        process.chdir(targetDir);
+    }
+    // Check if directory has git
+    const hasGit = fs.existsSync(path.join(targetDir, '.git'));
+    let repoUrl;
+    let repoName;
+    if (repoInput) {
+        if (repoInput.startsWith('http')) {
+            // It's a full URL - use existing repository
+            repoUrl = repoInput;
+            repoName = path.basename(repoUrl, '.git');
+            console.log(`📁 Using existing repository: ${repoUrl}`);
+        }
+        else {
+            // It's just a name - create new repository
+            repoName = repoInput;
+            console.log(`🔨 Creating repository: ${repoName}`);
+            try {
+                repoUrl = await githubService.createRepository(repoName, isPrivate);
+                console.log(`✅ Repository created: ${repoUrl}`);
+            }
+            catch (error) {
+                console.error('❌ Failed to create repository:', error);
+                throw error;
+            }
+        }
+    }
+    else {
+        // Auto-detect or create repository
+        repoName = path.basename(targetDir);
+        console.log(`🔍 Auto-detecting repository: ${repoName}`);
+        try {
+            repoUrl = await githubService.createRepository(repoName, isPrivate);
+            console.log(`✅ Repository created: ${repoUrl}`);
+        }
+        catch (error) {
+            console.error('❌ Failed to create repository:', error);
+            throw error;
+        }
+    }
+    // Initialize git if needed
+    if (!hasGit) {
+        console.log('📁 Initializing git repository...');
+        await gitService.init();
+        await gitService.addRemote('origin', repoUrl);
+    }
+    // Configure git
+    const config = await configService.loadConfig();
+    await gitService.setUser(config.username, config.email);
+    // Check status and add files
+    console.log('📊 Checking repository status...');
+    const status = await gitService.getStatus();
+    if (status.staged.length === 0 && !forceCommit) {
+        console.log('ℹ️ No changes to commit');
+        console.log('💡 Use --force (-f) flag to create an empty commit');
+        return;
+    }
+    // Add all files
+    console.log('📝 Adding all files to git...');
+    await gitService.addAll();
+    // Generate commit message if not provided
+    const finalMessage = commitMessage || generateAutoCommitMessage(targetDir);
+    console.log(`📝 Commit message: ${finalMessage}`);
+    // Handle multiple commits or single commit
+    if (multipleCommits > 1) {
+        console.log(`🔄 Creating ${multipleCommits} commits for better graph presence`);
+        // First, commit the actual changes
+        if (status.staged.length > 0) {
+            const gitDate = convertToGitDate(commitDate || new Date().toISOString());
+            await gitService.commit({ message: finalMessage, date: gitDate });
+        }
+        // Then create additional backdated commits
+        if (spreadHours > 0) {
+            await createBackdatedCommits(commitDate || new Date().toISOString(), multipleCommits - 1, spreadHours, finalMessage, gitService);
+        }
+    }
+    else {
+        // Single commit with proper dating
+        const gitDate = convertToGitDate(commitDate || new Date().toISOString());
+        await gitService.commit({ message: finalMessage, date: gitDate });
+    }
+    console.log('✅ Commit(s) created successfully');
+    // Show commit details
+    console.log('📋 Recent commits:');
+    const commits = await gitService.getCommits(5);
+    commits.forEach(commit => {
+        console.log(`  ${commit.hash} - ${commit.message} (${commit.date})`);
+    });
+    // Push changes
+    console.log('🚀 Pushing to remote...');
+    try {
+        await gitService.push('origin', 'main');
+        console.log('✅ Push successful!');
+    }
+    catch (error) {
+        console.error('❌ Push failed:', error);
+        throw error;
+    }
+    console.log('🎉 Operation completed successfully!');
+    console.log(`🌐 Repository: ${repoUrl}`);
+    if (options.open) {
+        const open = require('open');
+        await open(repoUrl);
+    }
+}
+// Create command handler
+async function handleCreate(name, options) {
+    const targetDir = options.dir || process.cwd();
+    const isPrivate = options.private || false;
+    const commitMessage = options.message;
+    const commitDate = options.date;
+    const multipleCommits = parseInt(options.multiple) || 1;
+    const spreadHours = parseInt(options.spread) || 0;
+    console.log(`🔨 Creating repository: ${name}`);
+    try {
+        const repoUrl = await githubService.createRepository(name, isPrivate);
+        console.log(`✅ Repository created: ${repoUrl}`);
+        // Initialize git in target directory
+        if (targetDir !== process.cwd()) {
+            process.chdir(targetDir);
+        }
+        await gitService.init();
+        await gitService.addRemote('origin', repoUrl);
+        // Configure git
+        const config = await configService.loadConfig();
+        await gitService.setUser(config.username, config.email);
+        // Add all files
+        await gitService.addAll();
+        // Create initial commit
+        const message = commitMessage || `🎉 Initial commit for ${name} project`;
+        const gitDate = convertToGitDate(commitDate || new Date().toISOString());
+        await gitService.commit({ message, date: gitDate });
+        // Create additional commits if requested
+        if (multipleCommits > 1 && spreadHours > 0) {
+            await createBackdatedCommits(commitDate || new Date().toISOString(), multipleCommits - 1, spreadHours, message, gitService);
+        }
+        // Push to remote
+        await gitService.push('origin', 'main');
+        console.log('🎉 Repository created and pushed successfully!');
+        console.log(`🌐 Repository: ${repoUrl}`);
+    }
+    catch (error) {
+        console.error('❌ Failed to create repository:', error);
+        throw error;
+    }
+}
+// Push command handler
+async function handlePush(options) {
+    const targetDir = options.dir || process.cwd();
+    const commitMessage = options.message;
+    const commitDate = options.date;
+    const multipleCommits = parseInt(options.multiple) || 1;
+    const spreadHours = parseInt(options.spread) || 0;
+    const forcePush = options.force || false;
+    console.log('🚀 Pushing changes with advanced features');
+    if (targetDir !== process.cwd()) {
+        process.chdir(targetDir);
+    }
+    // Check if git repository exists
+    if (!fs.existsSync(path.join(process.cwd(), '.git'))) {
+        console.error('❌ Not a git repository. Use "repoflow-js create" first.');
+        return;
+    }
+    // Check status
+    const status = await gitService.getStatus();
+    if (status.staged.length === 0) {
+        console.log('ℹ️ No changes to commit');
+        return;
+    }
+    // Add all files
+    await gitService.addAll();
+    // Generate commit message if not provided
+    const finalMessage = commitMessage || generateAutoCommitMessage(process.cwd());
+    // Handle multiple commits or single commit
+    if (multipleCommits > 1) {
+        console.log(`🔄 Creating ${multipleCommits} commits for better graph presence`);
+        // First, commit the actual changes
+        const gitDate = convertToGitDate(commitDate || new Date().toISOString());
+        await gitService.commit({ message: finalMessage, date: gitDate });
+        // Then create additional backdated commits
+        if (spreadHours > 0) {
+            await createBackdatedCommits(commitDate || new Date().toISOString(), multipleCommits - 1, spreadHours, finalMessage, gitService);
+        }
+    }
+    else {
+        // Single commit with proper dating
+        const gitDate = convertToGitDate(commitDate || new Date().toISOString());
+        await gitService.commit({ message: finalMessage, date: gitDate });
+    }
+    console.log('✅ Commit(s) created successfully');
+    // Push changes
+    try {
+        if (forcePush) {
+            await gitService.push('origin', 'main', { force: true });
+        }
+        else {
+            await gitService.push('origin', 'main');
+        }
+        console.log('✅ Push successful!');
+    }
+    catch (error) {
+        console.error('❌ Push failed:', error);
+        throw error;
+    }
+}
+// Status command handler
+async function handleStatus(options) {
+    const targetDir = options.dir || process.cwd();
+    if (targetDir !== process.cwd()) {
+        process.chdir(targetDir);
+    }
+    if (!fs.existsSync(path.join(process.cwd(), '.git'))) {
+        console.log('❌ Not a git repository');
+        return;
+    }
+    console.log('📊 Repository Status:');
+    console.log(`📁 Directory: ${process.cwd()}`);
+    const status = await gitService.getStatus();
+    console.log(`📝 Staged files: ${status.staged.length}`);
+    console.log(`📝 Modified files: ${status.modified.length}`);
+    console.log(`📝 Untracked files: ${status.untracked.length}`);
+    console.log('\n📋 Recent commits:');
+    const commits = await gitService.getCommits(10);
+    commits.forEach(commit => {
+        console.log(`  ${commit.hash} - ${commit.message} (${commit.date})`);
+    });
+    console.log('\n🌐 Remote repositories:');
+    const remotes = await gitService.getRemotes();
+    Object.entries(remotes).forEach(([name, url]) => {
+        console.log(`  ${name}: ${url}`);
+    });
+}
+// Interactive command handler
+async function handleInteractive() {
+    const readline = require('readline');
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+    console.log('🎯 RepoFlow Interactive Mode');
+    console.log('This will guide you through repository management step by step.\n');
+    try {
+        // Get target directory
+        const targetDir = await new Promise((resolve) => {
+            rl.question('📁 Target directory (current): ', (answer) => {
+                resolve(answer.trim() || process.cwd());
+            });
+        });
+        // Get repository name/URL
+        const repoInput = await new Promise((resolve) => {
+            rl.question('🔗 Repository name or URL: ', (answer) => {
+                resolve(answer.trim());
+            });
+        });
+        // Get commit message
+        const commitMessage = await new Promise((resolve) => {
+            rl.question('📝 Commit message (auto-generated if empty): ', (answer) => {
+                resolve(answer.trim());
+            });
+        });
+        // Get commit date
+        const commitDate = await new Promise((resolve) => {
+            rl.question('📅 Commit date (YYYY-MM-DD or empty for now): ', (answer) => {
+                resolve(answer.trim());
+            });
+        });
+        // Get private flag
+        const isPrivate = await new Promise((resolve) => {
+            rl.question('🔒 Private repository? (y/N): ', (answer) => {
+                resolve(answer.toLowerCase().startsWith('y'));
+            });
+        });
+        // Get multiple commits
+        const multipleCommits = await new Promise((resolve) => {
+            rl.question('🔄 Number of commits (1): ', (answer) => {
+                const num = parseInt(answer.trim()) || 1;
+                resolve(num);
+            });
+        });
+        // Get spread hours
+        const spreadHours = await new Promise((resolve) => {
+            rl.question('⏰ Spread commits over hours (0): ', (answer) => {
+                const num = parseInt(answer.trim()) || 0;
+                resolve(num);
+            });
+        });
+        rl.close();
+        // Execute the auto-push
+        await handleAutoPush({
+            dir: targetDir,
+            repo: repoInput,
+            message: commitMessage,
+            date: commitDate,
+            private: isPrivate,
+            multiple: multipleCommits.toString(),
+            spread: spreadHours.toString()
+        });
+    }
+    catch (error) {
+        console.error('❌ Interactive mode failed:', error);
+        rl.close();
+    }
+}
+// Config command handler
+async function handleConfig(options) {
+    if (options.show) {
+        const config = await configService.loadConfig();
+        console.log('📋 Current Configuration:');
+        console.log(`  Username: ${config.username}`);
+        console.log(`  Email: ${config.email}`);
+        console.log(`  Token: ${config.token ? '***' + config.token.slice(-4) : 'Not set'}`);
+        return;
+    }
+    if (options.token) {
+        await configService.saveConfig({ token: options.token });
+        console.log('✅ GitHub token saved');
+    }
+    if (options.username) {
+        await configService.saveConfig({ username: options.username });
+        console.log('✅ Username saved');
+    }
+    if (options.email) {
+        await configService.saveConfig({ email: options.email });
+        console.log('✅ Email saved');
+    }
+    if (!options.token && !options.username && !options.email) {
+        console.log('Use --help to see available options');
+    }
+}
+// UI command handler
+async function handleUI(options) {
+    const { startUIServer } = await Promise.resolve().then(() => __importStar(require('./ui-server')));
+    console.log(`🚀 Starting RepoFlow UI server on ${options.host}:${options.port}`);
+    if (options.open) {
+        const open = require('open');
+        setTimeout(() => {
+            open(`http://${options.host}:${options.port}`);
+        }, 2000);
+    }
+    await startUIServer(options.port);
+}
+// Parse command line arguments
+program.parse();
 //# sourceMappingURL=cli.js.map
