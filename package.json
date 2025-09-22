@@ -1,6 +1,6 @@
 {
   "name": "repoflow",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A comprehensive GitHub repository management tool with CLI and Web UI support",
   "main": "dist/index.js",
   "bin": {
