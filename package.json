@@ -4,7 +4,7 @@
   "description": "A comprehensive GitHub repository management tool with CLI and Web UI support",
   "main": "dist/index.js",
   "bin": {
-    "repoflow": "dist/cli.js",
+    "repoflow-js": "dist/cli.js",
     "repoflow-ui": "dist/ui-server.js"
   },
   "scripts": {
