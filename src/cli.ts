@@ -9,7 +9,6 @@ import * as path from 'path';
 
 const program = new Command();
 const gitService = new GitService();
-const githubService = new GitHubService();
 const configService = new ConfigService();
 
 // Load package.json for version
@@ -242,6 +241,7 @@ async function handleAutoPush(options: any) {
       console.log(`🔨 Creating repository: ${repoName}`);
       
       try {
+        const githubService = new GitHubService();
         repoUrl = await githubService.createRepository(repoName, isPrivate);
         console.log(`✅ Repository created: ${repoUrl}`);
       } catch (error) {
@@ -255,6 +255,7 @@ async function handleAutoPush(options: any) {
     console.log(`🔍 Auto-detecting repository: ${repoName}`);
     
     try {
+      const githubService = new GitHubService();
       repoUrl = await githubService.createRepository(repoName, isPrivate);
       console.log(`✅ Repository created: ${repoUrl}`);
     } catch (error) {
@@ -358,6 +359,7 @@ async function handleCreate(name: string, options: any) {
   console.log(`🔨 Creating repository: ${name}`);
   
   try {
+    const githubService = new GitHubService();
     const repoUrl = await githubService.createRepository(name, isPrivate);
     console.log(`✅ Repository created: ${repoUrl}`);
     

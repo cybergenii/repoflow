@@ -42,7 +42,6 @@ const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const program = new commander_1.Command();
 const gitService = new git_1.GitService();
-const githubService = new github_1.GitHubService();
 const configService = new config_1.ConfigService();
 // Load package.json for version
 const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8'));
@@ -252,6 +251,7 @@ async function handleAutoPush(options) {
             repoName = repoInput;
             console.log(`🔨 Creating repository: ${repoName}`);
             try {
+                const githubService = new github_1.GitHubService();
                 repoUrl = await githubService.createRepository(repoName, isPrivate);
                 console.log(`✅ Repository created: ${repoUrl}`);
             }
@@ -266,6 +266,7 @@ async function handleAutoPush(options) {
         repoName = path.basename(targetDir);
         console.log(`🔍 Auto-detecting repository: ${repoName}`);
         try {
+            const githubService = new github_1.GitHubService();
             repoUrl = await githubService.createRepository(repoName, isPrivate);
             console.log(`✅ Repository created: ${repoUrl}`);
         }
@@ -349,6 +350,7 @@ async function handleCreate(name, options) {
     const spreadHours = parseInt(options.spread) || 0;
     console.log(`🔨 Creating repository: ${name}`);
     try {
+        const githubService = new github_1.GitHubService();
         const repoUrl = await githubService.createRepository(name, isPrivate);
         console.log(`✅ Repository created: ${repoUrl}`);
         // Initialize git in target directory
