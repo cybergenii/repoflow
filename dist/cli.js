@@ -590,7 +590,7 @@ async function handleUI(options) {
             open(`http://${options.host}:${options.port}`);
         }, 2000);
     }
-    await startUIServer(options.port);
+    await startUIServer(options);
 }
 // Kill server command handler
 async function handleKill(options) {

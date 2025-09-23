@@ -657,7 +657,7 @@ async function handleUI(options: any) {
     }, 2000);
   }
   
-  await startUIServer(options.port);
+  await startUIServer(options);
 }
 
 // Kill server command handler

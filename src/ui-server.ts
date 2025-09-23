@@ -40,7 +40,20 @@ app.get('/api/commits', async (req, res) => {
 app.post('/api/create-repo', async (req, res) => {
   try {
     console.log('Creating repository with data:', req.body);
-    const github = new GitHubService();
+    
+    // Load config to get GitHub token
+    const configService = new (await import('./utils/config')).ConfigService();
+    const config = await configService.loadConfig();
+    
+    if (!config.token) {
+      res.status(400).json({ 
+        success: false, 
+        error: 'GitHub token not configured. Please configure your token first.' 
+      });
+      return;
+    }
+    
+    const github = new GitHubService({ token: config.token });
     const repoUrl = await github.createRepository(req.body.name, req.body.private);
     console.log('Repository created successfully:', repoUrl);
     res.json({ success: true, data: { cloneUrl: repoUrl, htmlUrl: repoUrl.replace('.git', '') } });
