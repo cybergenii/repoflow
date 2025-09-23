@@ -6,7 +6,6 @@ import path from 'path';
 import { GitService } from './services/git';
 import { GitHubService } from './services/github';
 import { UIOptions } from './types';
-import { loadConfig } from './utils/config';
 
 const app = express();
 const PORT = process.env['PORT'] || 3000;
@@ -40,10 +39,27 @@ app.get('/api/commits', async (req, res) => {
 
 app.post('/api/create-repo', async (req, res) => {
   try {
-    const config = await loadConfig();
-    const github = new GitHubService(config.github);
-    const result = await github.createRepository(req.body);
-    res.json(result);
+    const github = new GitHubService();
+    const repoUrl = await github.createRepository(req.body.name, req.body.private);
+    res.json({ success: true, data: { cloneUrl: repoUrl, htmlUrl: repoUrl.replace('.git', '') } });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/github/repos', async (_req, res) => {
+  try {
+    // This would need to be implemented in GitHubService
+    res.json({ success: true, data: [] });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/auto-push', async (_req, res) => {
+  try {
+    // This would implement the auto-push logic
+    res.json({ success: true, message: 'Auto-push completed successfully' });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }

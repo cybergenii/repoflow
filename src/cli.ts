@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
+import * as fs from 'fs';
+import * as path from 'path';
 import { GitService } from './services/git';
 import { GitHubService } from './services/github';
 import { ConfigService } from './utils/config';
-import * as fs from 'fs';
-import * as path from 'path';
 
 const program = new Command();
 const gitService = new GitService();

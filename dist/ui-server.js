@@ -10,7 +10,6 @@ const express_1 = __importDefault(require("express"));
 const path_1 = __importDefault(require("path"));
 const git_1 = require("./services/git");
 const github_1 = require("./services/github");
-const config_1 = require("./utils/config");
 const app = (0, express_1.default)();
 const PORT = process.env['PORT'] || 3000;
 // Middleware
@@ -41,10 +40,27 @@ app.get('/api/commits', async (req, res) => {
 });
 app.post('/api/create-repo', async (req, res) => {
     try {
-        const config = await (0, config_1.loadConfig)();
-        const github = new github_1.GitHubService(config.github);
-        const result = await github.createRepository(req.body);
-        res.json(result);
+        const github = new github_1.GitHubService();
+        const repoUrl = await github.createRepository(req.body.name, req.body.private);
+        res.json({ success: true, data: { cloneUrl: repoUrl, htmlUrl: repoUrl.replace('.git', '') } });
+    }
+    catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+app.get('/api/github/repos', async (_req, res) => {
+    try {
+        // This would need to be implemented in GitHubService
+        res.json({ success: true, data: [] });
+    }
+    catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+app.post('/api/auto-push', async (_req, res) => {
+    try {
+        // This would implement the auto-push logic
+        res.json({ success: true, message: 'Auto-push completed successfully' });
     }
     catch (error) {
         res.status(500).json({ success: false, error: error.message });

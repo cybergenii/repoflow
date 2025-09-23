@@ -35,11 +35,11 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const commander_1 = require("commander");
+const fs = __importStar(require("fs"));
+const path = __importStar(require("path"));
 const git_1 = require("./services/git");
 const github_1 = require("./services/github");
 const config_1 = require("./utils/config");
-const fs = __importStar(require("fs"));
-const path = __importStar(require("path"));
 const program = new commander_1.Command();
 const gitService = new git_1.GitService();
 const configService = new config_1.ConfigService();
