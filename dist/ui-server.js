@@ -116,19 +116,91 @@ app.post('/api/config', async (req, res) => {
 });
 app.get('/api/github/repos', async (_req, res) => {
     try {
-        // For now, return empty array - this would need to be implemented in GitHubService
-        res.json({ success: true, data: [] });
+        // Load config to get GitHub token
+        const configService = new (await Promise.resolve().then(() => __importStar(require('./utils/config')))).ConfigService();
+        const config = await configService.loadConfig();
+        if (!config.token) {
+            res.status(400).json({
+                success: false,
+                error: 'GitHub token not configured. Please configure your token first.'
+            });
+            return;
+        }
+        const github = new github_1.GitHubService({ token: config.token });
+        const repos = await github.getUserRepositories();
+        res.json({ success: true, data: repos });
     }
     catch (error) {
+        console.error('Failed to fetch repositories:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
-app.post('/api/auto-push', async (_req, res) => {
+app.post('/api/auto-push', async (req, res) => {
     try {
-        // This would implement the auto-push logic
-        res.json({ success: true, message: 'Auto-push completed successfully' });
+        const { directory, repoName, commitMessage, date, multipleCommits, spreadHours, isPrivate } = req.body;
+        // Load config to get GitHub token
+        const configService = new (await Promise.resolve().then(() => __importStar(require('./utils/config')))).ConfigService();
+        const config = await configService.loadConfig();
+        if (!config.token) {
+            res.status(400).json({
+                success: false,
+                error: 'GitHub token not configured. Please configure your token first.'
+            });
+            return;
+        }
+        const github = new github_1.GitHubService({ token: config.token });
+        const git = new git_1.GitService(directory || process.cwd());
+        // Check if directory is a git repository
+        const isGitRepo = await git.isRepository();
+        let repoUrl = '';
+        if (!isGitRepo) {
+            // Create new repository
+            repoUrl = await github.createRepository(repoName, isPrivate);
+            await git.init();
+            await git.addRemote('origin', repoUrl);
+        }
+        else {
+            // Get existing remote URL
+            const remotes = await git.getRemotes();
+            repoUrl = remotes['origin'] || '';
+        }
+        // Set git user
+        await git.setUser(config.username, config.email);
+        // Add all files
+        await git.addAll();
+        // Create commits
+        const commitCount = parseInt(multipleCommits) || 1;
+        const spreadHrs = parseInt(spreadHours) || 0;
+        for (let i = 0; i < commitCount; i++) {
+            let commitDate = date;
+            if (spreadHrs > 0 && i > 0) {
+                const hoursToSubtract = (i * spreadHrs) / (commitCount - 1);
+                const baseDate = new Date(date);
+                baseDate.setHours(baseDate.getHours() - hoursToSubtract);
+                commitDate = baseDate.toISOString();
+            }
+            const message = commitCount > 1 ?
+                `${commitMessage} (${i + 1}/${commitCount})` :
+                commitMessage;
+            await git.commit({
+                message,
+                date: commitDate
+            });
+        }
+        // Push to repository
+        await git.push('origin', 'main');
+        res.json({
+            success: true,
+            message: 'Auto-push completed successfully',
+            data: {
+                repoUrl: repoUrl.replace('.git', ''),
+                cloneUrl: repoUrl,
+                commitsCreated: commitCount
+            }
+        });
     }
     catch (error) {
+        console.error('Auto-push failed:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

@@ -55,6 +55,15 @@ export class GitService {
     }
   }
 
+  async isRepository(): Promise<boolean> {
+    try {
+      await this.runCommand('git rev-parse --git-dir');
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async initRepository(branch: string = 'main'): Promise<void> {
     await this.runCommand('git init');
     await this.runCommand(`git branch -M ${branch}`);

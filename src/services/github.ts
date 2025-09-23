@@ -110,4 +110,25 @@ export class GitHubService {
     }
     return null;
   }
+
+  async getUserRepositories(): Promise<any[]> {
+    try {
+      const response = await this.client.get('/user/repos?sort=updated&per_page=100');
+      return response.data.map((repo: any) => ({
+        id: repo.id,
+        name: repo.name,
+        fullName: repo.full_name,
+        description: repo.description,
+        private: repo.private,
+        htmlUrl: repo.html_url,
+        cloneUrl: repo.clone_url,
+        sshUrl: repo.ssh_url,
+        updatedAt: repo.updated_at,
+        language: repo.language
+      }));
+    } catch (error: any) {
+      console.error('Failed to fetch user repositories:', error);
+      throw new Error('Failed to fetch repositories');
+    }
+  }
 }

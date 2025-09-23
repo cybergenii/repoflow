@@ -51,7 +51,9 @@ const Dashboard: React.FC = () => {
     multiple: 1,
     spread: 0,
     backdate: false,
-    force: false
+    force: false,
+    repoName: '',
+    isPrivate: false
   })
   const [configForm, setConfigForm] = useState({
     token: '',
@@ -159,21 +161,34 @@ const Dashboard: React.FC = () => {
 
   const autoPush = async () => {
     try {
+      if (!selectedDirectory) {
+        alert('Please select a directory first')
+        return
+      }
+
       const response = await axios.post('/api/auto-push', {
-        directory: selectedDirectory || undefined,
-        repo: selectedRepo?.full_name || undefined,
-        options: pushOptions
+        directory: selectedDirectory,
+        repoName: pushOptions.repoName || selectedRepo?.name,
+        commitMessage: pushOptions.message || 'Update project',
+        date: pushOptions.date || new Date().toISOString(),
+        multipleCommits: pushOptions.multiple,
+        spreadHours: pushOptions.spread,
+        isPrivate: pushOptions.isPrivate
       })
+      
       if (response.data.success) {
-        alert('Auto-push completed successfully!')
+        alert(`Auto-push completed successfully! Created ${response.data.data.commitsCreated} commits.`)
+        if (response.data.data.repoUrl) {
+          alert(`Repository: ${response.data.data.repoUrl}`)
+        }
         checkStatus()
         setShowAdvancedPush(false)
       } else {
-        alert('Failed to auto-push: ' + response.data.message)
+        alert('Failed to auto-push: ' + response.data.error)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to auto-push:', error)
-      alert('Failed to auto-push')
+      alert('Failed to auto-push: ' + (error.response?.data?.error || error.message))
     }
   }
 
@@ -572,70 +587,111 @@ const Dashboard: React.FC = () => {
       {/* Advanced Push Modal */}
       {showAdvancedPush && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+          <div className="relative top-10 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Advanced Push Options</h3>
               <div className="space-y-4">
+                {/* Repository Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Commit Message</label>
-                  <input
-                    type="text"
-                    value={pushOptions.message}
-                    onChange={(e) => setPushOptions({ ...pushOptions, message: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Auto-generated if empty"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Commit Date</label>
-                  <input
-                    type="datetime-local"
-                    value={pushOptions.date}
-                    onChange={(e) => setPushOptions({ ...pushOptions, date: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Multiple Commits</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={pushOptions.multiple}
-                      onChange={(e) => setPushOptions({ ...pushOptions, multiple: parseInt(e.target.value) || 1 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Spread Hours</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={pushOptions.spread}
-                      onChange={(e) => setPushOptions({ ...pushOptions, spread: parseInt(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Select Repository</label>
+                  <div className="flex space-x-2">
+                    <select
+                      value={selectedRepo?.fullName || ''}
+                      onChange={(e) => {
+                        const repo = githubRepos.find(r => r.fullName === e.target.value);
+                        setSelectedRepo(repo || null);
+                      }}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select a repository...</option>
+                      {githubRepos.map((repo) => (
+                        <option key={repo.fullName} value={repo.fullName}>
+                          {repo.name} {repo.private ? '(Private)' : '(Public)'}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={getGithubRepos}
+                      className="px-3 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                    >
+                      Refresh
+                    </button>
                   </div>
                 </div>
-                <div className="flex space-x-4">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={pushOptions.backdate}
-                      onChange={(e) => setPushOptions({ ...pushOptions, backdate: e.target.checked })}
-                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Enable backdating</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={pushOptions.force}
-                      onChange={(e) => setPushOptions({ ...pushOptions, force: e.target.checked })}
-                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Force push</span>
-                  </label>
+
+                {/* New Repository Option */}
+                <div className="border-t pt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Or Create New Repository</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <input
+                        type="text"
+                        value={pushOptions.repoName}
+                        onChange={(e) => setPushOptions({ ...pushOptions, repoName: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Repository name"
+                      />
+                    </div>
+                    <div className="flex items-center">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={pushOptions.isPrivate}
+                          onChange={(e) => setPushOptions({ ...pushOptions, isPrivate: e.target.checked })}
+                          className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Private repository</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Commit Options */}
+                <div className="border-t pt-4">
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Commit Options</h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Commit Message</label>
+                      <input
+                        type="text"
+                        value={pushOptions.message}
+                        onChange={(e) => setPushOptions({ ...pushOptions, message: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Auto-generated if empty"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Commit Date</label>
+                      <input
+                        type="datetime-local"
+                        value={pushOptions.date}
+                        onChange={(e) => setPushOptions({ ...pushOptions, date: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Multiple Commits</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={pushOptions.multiple}
+                          onChange={(e) => setPushOptions({ ...pushOptions, multiple: parseInt(e.target.value) || 1 })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Spread Hours</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={pushOptions.spread}
+                          onChange={(e) => setPushOptions({ ...pushOptions, spread: parseInt(e.target.value) || 0 })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="flex justify-end space-x-3 mt-6">

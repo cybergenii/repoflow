@@ -10,6 +10,7 @@ export declare class GitService {
         force?: boolean;
     }): Promise<void>;
     getRemotes(): Promise<Record<string, string>>;
+    isRepository(): Promise<boolean>;
     initRepository(branch?: string): Promise<void>;
     setRemoteUrl(name: string, url: string): Promise<void>;
     addFiles(files?: string[]): Promise<void>;

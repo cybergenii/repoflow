@@ -11,5 +11,6 @@ export declare class GitHubService {
         owner: string;
         repo: string;
     } | null;
+    getUserRepositories(): Promise<any[]>;
 }
 //# sourceMappingURL=github.d.ts.map
