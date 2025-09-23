@@ -8,9 +8,9 @@
     "repoflow-ui": "dist/ui-server.js"
   },
   "scripts": {
-    "build": "tsc && npm run build:ui",
+    "build": "tsc --project config/tsconfig.json && npm run build:ui",
     "build:ui": "cd ui && npm run build",
-    "dev": "concurrently \"tsc -w\" \"npm run dev:ui\"",
+    "dev": "concurrently \"tsc -w --project config/tsconfig.json\" \"npm run dev:ui\"",
     "dev:ui": "cd ui && npm run dev",
     "start": "node dist/cli.js",
     "start:ui": "node dist/ui-server.js",
