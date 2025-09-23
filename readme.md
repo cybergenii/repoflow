@@ -45,6 +45,28 @@ npx repoflow@latest --help
 
 ### Configuration
 
+#### **Getting Your GitHub Personal Access Token**
+
+1. **Go to GitHub Settings**:
+   - Visit: https://github.com/settings/tokens
+   - Or: GitHub Profile → Settings → Developer settings → Personal access tokens → Tokens (classic)
+
+2. **Create New Token**:
+   - Click "Generate new token" → "Generate new token (classic)"
+   - Give it a descriptive name: "RepoFlow CLI"
+   - Set expiration (recommended: 90 days or No expiration)
+   - Select scopes:
+     - ✅ `repo` (Full control of private repositories)
+     - ✅ `workflow` (Update GitHub Action workflows)
+     - ✅ `write:packages` (Upload packages to GitHub Package Registry)
+     - ✅ `delete:packages` (Delete packages from GitHub Package Registry)
+
+3. **Copy the Token**:
+   - Copy the generated token (starts with `ghp_`)
+   - **Important**: Save it securely - you won't see it again!
+
+#### **Configure RepoFlow**
+
 ```bash
 # Set up your GitHub credentials
 repoflow-js config --token YOUR_GITHUB_TOKEN
@@ -54,6 +76,16 @@ repoflow-js config --email your-email@example.com
 # View current configuration
 repoflow-js config --show
 ```
+
+#### **Web UI Configuration**
+
+When you first start the web UI, you'll be prompted to configure your GitHub credentials:
+
+1. **GitHub Personal Access Token**: Enter your token from the steps above
+2. **GitHub Username**: Your GitHub username
+3. **Email Address**: Your email address (used for Git commits)
+
+The web UI will guide you through this process with helpful links to GitHub settings.
 
 ## 📖 Usage
 
@@ -367,6 +399,22 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - React UI with [Vite](https://vitejs.dev/) and [Tailwind CSS](https://tailwindcss.com/)
 - GitHub API integration
 - Inspired by advanced Git workflow automation
+
+## 📚 Documentation & Scripts
+
+### **Main Documentation**
+- **[Complete README](https://github.com/cybergenii/repoflow#readme)** - Full feature documentation and usage guide
+- **[Terminal Usage Guide](https://github.com/cybergenii/repoflow/blob/main/TERMINAL_USAGE.md)** - Command-line interface examples
+- **[Command Conflict Resolution](https://github.com/cybergenii/repoflow/blob/main/COMMAND_CONFLICT_RESOLUTION.md)** - Troubleshooting guide
+
+### **Original Scripts**
+- **[Advanced Script (adv.sh)](https://github.com/cybergenii/repoflow/blob/main/adv.sh)** - Original bash script with all features
+- **[Complex Commit Script](https://github.com/cybergenii/repoflow/blob/main/complex_commit.sh)** - Advanced commit manipulation
+- **[Simple Script (ad.sh)](https://github.com/cybergenii/repoflow/blob/main/ad.sh)** - Basic repository management
+
+### **Example Scripts**
+- **[Run Examples (Linux/Mac)](https://github.com/cybergenii/repoflow/blob/main/run-examples.sh)** - Example usage scripts
+- **[Run Examples (Windows)](https://github.com/cybergenii/repoflow/blob/main/run-examples.bat)** - Windows batch examples
 
 ## 📞 Support
 

@@ -73,11 +73,14 @@ app.get('/api/commits', async (req, res) => {
 });
 app.post('/api/create-repo', async (req, res) => {
     try {
+        console.log('Creating repository with data:', req.body);
         const github = new github_1.GitHubService();
         const repoUrl = await github.createRepository(req.body.name, req.body.private);
+        console.log('Repository created successfully:', repoUrl);
         res.json({ success: true, data: { cloneUrl: repoUrl, htmlUrl: repoUrl.replace('.git', '') } });
     }
     catch (error) {
+        console.error('Failed to create repository:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -103,7 +106,7 @@ app.post('/api/config', async (req, res) => {
 });
 app.get('/api/github/repos', async (_req, res) => {
     try {
-        // This would need to be implemented in GitHubService
+        // For now, return empty array - this would need to be implemented in GitHubService
         res.json({ success: true, data: [] });
     }
     catch (error) {
@@ -160,15 +163,28 @@ app.get('*', (_req, res) => {
 async function startUIServer(options = {}) {
     const port = options.port || PORT;
     const host = options.host || 'localhost';
-    app.listen(Number(port), host, () => {
-        console.log(`🚀 RepoFlow UI server running at http://${host}:${port}`);
-        if (options.open) {
-            const { exec } = require('child_process');
-            const url = `http://${host}:${port}`;
-            const start = process.platform === 'darwin' ? 'open' :
-                process.platform === 'win32' ? 'start' : 'xdg-open';
-            exec(`${start} ${url}`);
-        }
+    return new Promise((resolve, reject) => {
+        const server = app.listen(Number(port), host, () => {
+            console.log(`🚀 RepoFlow UI server running at http://${host}:${port}`);
+            if (options.open) {
+                const { exec } = require('child_process');
+                const url = `http://${host}:${port}`;
+                const start = process.platform === 'darwin' ? 'open' :
+                    process.platform === 'win32' ? 'start' : 'xdg-open';
+                exec(`${start} ${url}`);
+            }
+            resolve();
+        });
+        server.on('error', (error) => {
+            if (error.code === 'EADDRINUSE') {
+                console.error(`❌ Port ${port} is already in use. Try a different port.`);
+                reject(new Error(`Port ${port} is already in use`));
+            }
+            else {
+                console.error('❌ Server error:', error);
+                reject(error);
+            }
+        });
     });
 }
 if (require.main === module) {
