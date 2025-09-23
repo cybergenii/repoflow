@@ -197,6 +197,20 @@ const Dashboard: React.FC = () => {
     }
   }
 
+  const getGithubRepos = async () => {
+    try {
+      const response = await axios.get('/api/github/repos')
+      if (response.data.success) {
+        setGithubRepos(response.data.data)
+      } else {
+        alert('Failed to fetch repositories: ' + response.data.error)
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch repositories:', error)
+      alert('Failed to fetch repositories: ' + (error.response?.data?.error || error.message))
+    }
+  }
+
   const selectDirectory = () => {
     // Create a file input for directory selection
     const input = document.createElement('input')
@@ -399,6 +413,7 @@ const Dashboard: React.FC = () => {
               onClick={() => {
                 console.log('Advanced Push clicked, selectedDirectory:', selectedDirectory);
                 setShowAdvancedPush(true);
+                getGithubRepos(); // Load repositories when modal opens
               }}
               className={`w-full px-4 py-2 rounded-md transition-colors ${
                 selectedDirectory 
