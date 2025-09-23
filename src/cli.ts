@@ -143,6 +143,21 @@ program
     }
   });
 
+// Kill server command
+program
+  .command('kill')
+  .description('Kill the UI server process')
+  .option('-p, --port <port>', 'Port of the server to kill', '3000')
+  .option('-a, --all', 'Kill all RepoFlow UI servers')
+  .action(async (options) => {
+    try {
+      await handleKill(options);
+    } catch (error) {
+      console.error('❌ Error:', error);
+      process.exit(1);
+    }
+  });
+
 // Helper function to convert date to Git format
 function convertToGitDate(inputDate: string): string {
   if (!inputDate) {
@@ -643,6 +658,93 @@ async function handleUI(options: any) {
   }
   
   await startUIServer(options.port);
+}
+
+// Kill server command handler
+async function handleKill(options: any) {
+  const { exec } = require('child_process');
+  const { promisify } = require('util');
+  const execAsync = promisify(exec);
+  
+  try {
+    if (options.all) {
+      console.log('🔍 Looking for all RepoFlow UI servers...');
+      
+      // Find all Node.js processes running repoflow UI
+      const { stdout } = await execAsync('tasklist /FI "IMAGENAME eq node.exe" /FO CSV');
+      const lines = stdout.split('\n').filter((line: string) => line.includes('node.exe'));
+      
+      let killedCount = 0;
+      for (const line of lines) {
+        const parts = line.split(',');
+        if (parts.length >= 2) {
+          const pid = parts[1].replace(/"/g, '');
+          try {
+            // Check if this process is running repoflow UI
+            const { stdout: cmdline } = await execAsync(`wmic process where processid=${pid} get commandline /format:list`);
+            if (cmdline.includes('repoflow') && cmdline.includes('ui')) {
+              await execAsync(`taskkill /PID ${pid} /F`);
+              console.log(`✅ Killed RepoFlow UI server (PID: ${pid})`);
+              killedCount++;
+            }
+          } catch (err) {
+            // Process might have already ended
+          }
+        }
+      }
+      
+      if (killedCount === 0) {
+        console.log('ℹ️  No RepoFlow UI servers found running');
+      } else {
+        console.log(`🎉 Killed ${killedCount} RepoFlow UI server(s)`);
+      }
+    } else {
+      console.log(`🔍 Looking for RepoFlow UI server on port ${options.port}...`);
+      
+      // Find process using the specific port
+      const { stdout } = await execAsync(`netstat -ano | findstr :${options.port}`);
+      const lines = stdout.split('\n').filter((line: string) => line.includes(`:${options.port}`));
+      
+      if (lines.length === 0) {
+        console.log(`ℹ️  No process found using port ${options.port}`);
+        return;
+      }
+      
+      // Extract PID from netstat output
+      const pids = new Set();
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length >= 5) {
+          const pid = parts[parts.length - 1];
+          if (pid && !isNaN(parseInt(pid))) {
+            pids.add(pid);
+          }
+        }
+      }
+      
+      let killedCount = 0;
+      for (const pid of pids) {
+        try {
+          // Verify it's a Node.js process running repoflow
+          const { stdout: cmdline } = await execAsync(`wmic process where processid=${pid} get commandline /format:list`);
+          if (cmdline.includes('repoflow') && cmdline.includes('ui')) {
+            await execAsync(`taskkill /PID ${pid} /F`);
+            console.log(`✅ Killed RepoFlow UI server on port ${options.port} (PID: ${pid})`);
+            killedCount++;
+          }
+        } catch (err) {
+          // Process might have already ended or not be repoflow
+        }
+      }
+      
+      if (killedCount === 0) {
+        console.log(`ℹ️  No RepoFlow UI server found on port ${options.port}`);
+      }
+    }
+  } catch (error: any) {
+    console.error('❌ Error killing server:', error.message);
+    throw error;
+  }
 }
 
 // Parse command line arguments
