@@ -702,7 +702,19 @@ async function handleKill(options: any) {
       console.log(`🔍 Looking for RepoFlow UI server on port ${options.port}...`);
       
       // Find process using the specific port
-      const { stdout } = await execAsync(`netstat -ano | findstr :${options.port}`);
+      let stdout = '';
+      try {
+        const result = await execAsync(`netstat -ano | findstr :${options.port}`);
+        stdout = result.stdout;
+      } catch (error: any) {
+        // netstat returns exit code 1 when no matches found
+        if (error.code === 1) {
+          console.log(`ℹ️  No process found using port ${options.port}`);
+          return;
+        }
+        throw error;
+      }
+      
       const lines = stdout.split('\n').filter((line: string) => line.includes(`:${options.port}`));
       
       if (lines.length === 0) {
