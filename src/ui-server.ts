@@ -47,6 +47,26 @@ app.post('/api/create-repo', async (req, res) => {
   }
 });
 
+app.get('/api/config', async (_req, res) => {
+  try {
+    const configService = new (await import('./utils/config')).ConfigService();
+    const config = await configService.loadConfig();
+    res.json({ success: true, data: config });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/config', async (req, res) => {
+  try {
+    const configService = new (await import('./utils/config')).ConfigService();
+    await configService.saveConfig(req.body);
+    res.json({ success: true, message: 'Configuration saved successfully' });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.get('/api/github/repos', async (_req, res) => {
   try {
     // This would need to be implemented in GitHubService
