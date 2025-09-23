@@ -33,6 +33,24 @@
 
 ## 🚀 Quick Start
 
+## 📁 Project Structure
+
+RepoFlow is organized into clear, logical directories:
+
+```
+repoflow/
+├── 📁 scripts/          # All shell scripts and batch files
+├── 📁 docs/            # Individual script documentation  
+├── 📁 examples/        # Example usage scripts
+├── 📁 config/          # Configuration files
+├── 📁 src/             # Source code (TypeScript, Python, Rust)
+├── 📁 ui/              # React web interface
+├── 📁 tests/           # Test files
+└── 📄 README.md        # This file
+```
+
+See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for detailed organization.
+
 ### Installation
 
 ```bash
