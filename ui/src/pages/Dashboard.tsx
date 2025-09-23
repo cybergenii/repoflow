@@ -32,6 +32,11 @@ interface UserConfig {
 const Dashboard: React.FC = () => {
   const [showCreateRepo, setShowCreateRepo] = useState(false)
   const [showAdvancedPush, setShowAdvancedPush] = useState(false)
+  
+  // Debug: Log when showAdvancedPush changes
+  React.useEffect(() => {
+    console.log('showAdvancedPush state changed:', showAdvancedPush);
+  }, [showAdvancedPush]);
   const [showDirectorySelect, setShowDirectorySelect] = useState(false)
   const [showRepoSelect, setShowRepoSelect] = useState(false)
   const [showConfigSetup, setShowConfigSetup] = useState(false)
@@ -391,11 +396,18 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="mt-4">
             <button
-              onClick={() => setShowAdvancedPush(true)}
-              className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+              onClick={() => {
+                console.log('Advanced Push clicked, selectedDirectory:', selectedDirectory);
+                setShowAdvancedPush(true);
+              }}
+              className={`w-full px-4 py-2 rounded-md transition-colors ${
+                selectedDirectory 
+                  ? 'bg-green-600 text-white hover:bg-green-700' 
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
               disabled={!selectedDirectory}
             >
-              Advanced Push
+              Advanced Push {!selectedDirectory && '(Select directory first)'}
             </button>
           </div>
         </div>
@@ -589,7 +601,17 @@ const Dashboard: React.FC = () => {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-10 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Advanced Push Options</h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Advanced Push Options</h3>
+                <button
+                  onClick={() => setShowAdvancedPush(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
               <div className="space-y-4">
                 {/* Repository Selection */}
                 <div>
