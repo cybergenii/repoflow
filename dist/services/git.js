@@ -173,6 +173,8 @@ class GitService {
             const commitDate = new Date(start.getTime() + (i * timeStep));
             const isoDate = commitDate.toISOString();
             const message = i === 0 ? baseMessage : `${baseMessage} (part ${i + 1}/${count})`;
+            // Add all changes before each commit to ensure there's something to commit
+            await this.addAll();
             process.env['GIT_AUTHOR_DATE'] = isoDate;
             process.env['GIT_COMMITTER_DATE'] = isoDate;
             try {

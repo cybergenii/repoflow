@@ -206,8 +206,11 @@ export class GitService {
       
       const message = i === 0 ? baseMessage : `${baseMessage} (part ${i + 1}/${count})`;
       
-          process.env['GIT_AUTHOR_DATE'] = isoDate;
-          process.env['GIT_COMMITTER_DATE'] = isoDate;
+      // Add all changes before each commit to ensure there's something to commit
+      await this.addAll();
+      
+      process.env['GIT_AUTHOR_DATE'] = isoDate;
+      process.env['GIT_COMMITTER_DATE'] = isoDate;
       
       try {
         await this.runCommand(`git commit --allow-empty -m "${message}"`);
