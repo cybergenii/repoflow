@@ -124,11 +124,36 @@ export class GitHubService {
         cloneUrl: repo.clone_url,
         sshUrl: repo.ssh_url,
         updatedAt: repo.updated_at,
-        language: repo.language
+        language: repo.language,
+        owner: repo.owner.login
       }));
     } catch (error: any) {
       console.error('Failed to fetch user repositories:', error);
       throw new Error('Failed to fetch repositories');
+    }
+  }
+
+  async deleteRepository(owner: string, repo: string): Promise<void> {
+    try {
+      await this.client.delete(`/repos/${owner}/${repo}`);
+    } catch (error: any) {
+      throw new Error(`Failed to delete repository: ${error.response?.data?.message || error.message}`);
+    }
+  }
+
+  async updateRepository(owner: string, repo: string, updates: { name?: string; description?: string; private?: boolean }): Promise<any> {
+    try {
+      const response = await this.client.patch(`/repos/${owner}/${repo}`, updates);
+      return {
+        name: response.data.name,
+        fullName: response.data.full_name,
+        description: response.data.description,
+        private: response.data.private,
+        htmlUrl: response.data.html_url,
+        cloneUrl: response.data.clone_url
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to update repository: ${error.response?.data?.message || error.message}`);
     }
   }
 }

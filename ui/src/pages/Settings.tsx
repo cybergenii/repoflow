@@ -29,8 +29,11 @@ const Settings: React.FC = () => {
   const saveSettings = async () => {
     setSaving(true)
     try {
-      // In a real app, you'd save to the backend
-      localStorage.setItem('repoflow-settings', JSON.stringify(settings))
+      await axios.post('/api/config', {
+        token: settings.token,
+        username: settings.username,
+        email: settings.email
+      })
       alert('Settings saved successfully!')
     } catch (error) {
       alert('Failed to save settings')
@@ -39,12 +42,41 @@ const Settings: React.FC = () => {
     }
   }
 
-  useEffect(() => {
-    // Load settings from localStorage
-    const saved = localStorage.getItem('repoflow-settings')
-    if (saved) {
-      setSettings(JSON.parse(saved))
+  const handleLogout = async () => {
+    if (!confirm('Are you sure you want to logout? This will clear all saved configuration.')) {
+      return
     }
+
+    try {
+      const response = await axios.post('/api/logout')
+      if (response.data.success) {
+        setSettings({ token: '', username: '', email: '', name: '' })
+        setTokenValid(null)
+        alert('Successfully logged out!')
+      }
+    } catch (error) {
+      alert('Failed to logout')
+    }
+  }
+
+  useEffect(() => {
+    // Load settings from backend
+    const loadSettings = async () => {
+      try {
+        const response = await axios.get('/api/config')
+        if (response.data.success) {
+          setSettings({
+            token: response.data.data.token || '',
+            username: response.data.data.username || '',
+            email: response.data.data.email || '',
+            name: ''
+          })
+        }
+      } catch (error) {
+        console.error('Failed to load settings:', error)
+      }
+    }
+    loadSettings()
   }, [])
 
   return (
@@ -125,13 +157,19 @@ const Settings: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-6 flex space-x-3">
           <button
             onClick={saveSettings}
             disabled={saving}
             className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save Settings'}
+          </button>
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+          >
+            Logout
           </button>
         </div>
       </div>

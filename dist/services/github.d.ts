@@ -12,5 +12,11 @@ export declare class GitHubService {
         repo: string;
     } | null;
     getUserRepositories(): Promise<any[]>;
+    deleteRepository(owner: string, repo: string): Promise<void>;
+    updateRepository(owner: string, repo: string, updates: {
+        name?: string;
+        description?: string;
+        private?: boolean;
+    }): Promise<any>;
 }
 //# sourceMappingURL=github.d.ts.map

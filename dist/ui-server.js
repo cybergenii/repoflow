@@ -306,6 +306,62 @@ app.post('/api/logout', async (_req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+app.delete('/api/github/repos/:owner/:repo', async (req, res) => {
+    try {
+        const { owner, repo } = req.params;
+        // Load config to get GitHub token
+        const configService = new (await Promise.resolve().then(() => __importStar(require('./utils/config')))).ConfigService();
+        const config = await configService.loadConfig();
+        if (!config.token) {
+            res.status(400).json({
+                success: false,
+                error: 'GitHub token not configured. Please configure your token first.'
+            });
+            return;
+        }
+        const github = new github_1.GitHubService({ token: config.token });
+        await github.deleteRepository(owner, repo);
+        res.json({
+            success: true,
+            message: `Repository ${owner}/${repo} deleted successfully`
+        });
+    }
+    catch (error) {
+        console.error('Failed to delete repository:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+app.patch('/api/github/repos/:owner/:repo', async (req, res) => {
+    try {
+        const { owner, repo } = req.params;
+        const { newName, description, private: isPrivate } = req.body;
+        // Load config to get GitHub token
+        const configService = new (await Promise.resolve().then(() => __importStar(require('./utils/config')))).ConfigService();
+        const config = await configService.loadConfig();
+        if (!config.token) {
+            res.status(400).json({
+                success: false,
+                error: 'GitHub token not configured. Please configure your token first.'
+            });
+            return;
+        }
+        const github = new github_1.GitHubService({ token: config.token });
+        const updatedRepo = await github.updateRepository(owner, repo, {
+            name: newName,
+            description,
+            private: isPrivate
+        });
+        res.json({
+            success: true,
+            message: 'Repository updated successfully',
+            data: updatedRepo
+        });
+    }
+    catch (error) {
+        console.error('Failed to update repository:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 // Serve UI
 app.get('*', (_req, res) => {
     res.sendFile(path_1.default.join(__dirname, '../ui/dist/index.html'));
