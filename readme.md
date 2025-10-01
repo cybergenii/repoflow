@@ -14,6 +14,7 @@
 - **Interactive Mode**: Guided step-by-step repository management
 - **Directory Selection**: Work with any directory as source
 - **Repository Selection**: Fetch and select from your existing repositories
+- **Account Management**: Login, logout, and switch between GitHub accounts easily
 
 ### 🌐 **Web UI Features**
 - **Modern React Interface**: Beautiful, responsive web UI
@@ -22,13 +23,18 @@
 - **Advanced Commit Options**: Set custom dates, spread commits over time
 - **Real-time Status**: Live repository status and commit information
 - **Settings Management**: Configure GitHub token, username, and email
+- **Logout Feature**: Clear all saved credentials securely
 
 ### 🔧 **Advanced Features**
 - **Multiple Commit Creation**: Create multiple commits for better graph presence
 - **Time Spreading**: Spread commits over hours/days for realistic patterns
 - **Backdating**: Set custom commit dates for historical commits
 - **Auto-Repository Creation**: Automatically create GitHub repositories
-- **Smart Commit Messages**: Auto-generate contextual commit messages
+- **Human-Like Commit Messages**: 50+ professional, varied commit messages (no more "Update project (1/10)")
+- **Smart Branch Detection**: Automatically detects and uses current branch (master/main/custom)
+- **Token-Based Authentication**: Secure push authentication using your GitHub token
+- **Upstream Tracking**: Automatically sets upstream branch on first push
+- **Remote Origin Management**: Handles missing or misconfigured remotes automatically
 - **Cross-Platform**: Works on Windows, Linux, and macOS
 
 ## 🚀 Quick Start
@@ -86,13 +92,19 @@ npx repoflow@latest --help
 #### **Configure RepoFlow**
 
 ```bash
-# Set up your GitHub credentials
+# Set up your GitHub credentials (all in one command)
+repoflow-js config --token YOUR_GITHUB_TOKEN --username your-username --email your-email@example.com
+
+# Or set them individually
 repoflow-js config --token YOUR_GITHUB_TOKEN
 repoflow-js config --username your-username
 repoflow-js config --email your-email@example.com
 
 # View current configuration
 repoflow-js config --show
+
+# Logout and clear all configuration
+repoflow-js logout
 ```
 
 #### **Web UI Configuration**
@@ -282,6 +294,19 @@ Options:
   --show                       Show current configuration
 ```
 
+### **Logout Command**
+```bash
+repoflow-js logout
+
+Description:
+  Logout and clear all saved configuration including token, username, and email
+  
+Example:
+  repoflow-js logout
+  # ✅ Successfully logged out!
+  # 🗑️  All saved configuration has been cleared.
+```
+
 ### **UI Command**
 ```bash
 repoflow-js ui [options]
@@ -300,6 +325,21 @@ Options:
 repoflow-js auto --repo my-project --multiple 10 --spread 720 --date "2024-01-01"
 ```
 
+### **Human-Like Commit Messages**
+RepoFlow automatically generates natural, varied commit messages instead of robotic ones:
+
+```bash
+# Instead of: "Update project (1/10)", "Update project (2/10)", etc.
+# You get:
+# ✅ Initial commit
+# ✅ Implement user authentication system
+# ✅ Add responsive design for mobile
+# ✅ Update documentation and README
+# ✅ Optimize performance and loading speed
+```
+
+50+ different professional commit message templates are used automatically!
+
 ### **Backdate Existing Project**
 ```bash
 # Add commits with specific dates
@@ -310,12 +350,35 @@ repoflow-js push --date "2024-01-15" --multiple 3 --spread 24
 ```bash
 # Use existing repository URL
 repoflow-js auto --repo https://github.com/username/existing-repo.git
+
+# Or work with directory that already has a repo
+cd /path/to/existing/project
+repoflow-js auto --multiple 5 --spread 12
+```
+
+### **Smart Branch Detection**
+RepoFlow automatically detects your current branch (main, master, or custom):
+
+```bash
+# Works with any branch - no need to specify!
+repoflow-js auto --repo my-project
+# Automatically detects: master, main, develop, etc.
 ```
 
 ### **Interactive Setup**
 ```bash
 # Guided setup for complex scenarios
 repoflow-js interactive
+```
+
+### **Account Management**
+```bash
+# Switch between different GitHub accounts
+repoflow-js logout
+repoflow-js config --token NEW_TOKEN --username new-user --email new@email.com
+
+# Check current account
+repoflow-js config --show
 ```
 
 ## 🌐 Web UI Usage
@@ -422,23 +485,121 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### **Main Documentation**
 - **[Complete README](https://github.com/cybergenii/repoflow#readme)** - Full feature documentation and usage guide
-- **[Terminal Usage Guide](https://github.com/cybergenii/repoflow/blob/main/TERMINAL_USAGE.md)** - Command-line interface examples
-- **[Command Conflict Resolution](https://github.com/cybergenii/repoflow/blob/main/COMMAND_CONFLICT_RESOLUTION.md)** - Troubleshooting guide
+- **[Terminal Usage Guide](TERMINAL_USAGE.md)** - Command-line interface examples
+- **[Command Conflict Resolution](COMMAND_CONFLICT_RESOLUTION.md)** - Troubleshooting guide
+- **[Project Structure](PROJECT_STRUCTURE.md)** - Detailed project organization
+- **[Release Guide](RELEASE_GUIDE.md)** - Instructions for creating releases
 
-### **Original Scripts**
-- **[Advanced Script (adv.sh)](https://github.com/cybergenii/repoflow/blob/main/adv.sh)** - Original bash script with all features
-- **[Complex Commit Script](https://github.com/cybergenii/repoflow/blob/main/complex_commit.sh)** - Advanced commit manipulation
-- **[Simple Script (ad.sh)](https://github.com/cybergenii/repoflow/blob/main/ad.sh)** - Basic repository management
+### **Available Shell Scripts** (`scripts/` directory)
 
-### **Example Scripts**
-- **[Run Examples (Linux/Mac)](https://github.com/cybergenii/repoflow/blob/main/run-examples.sh)** - Example usage scripts
-- **[Run Examples (Windows)](https://github.com/cybergenii/repoflow/blob/main/run-examples.bat)** - Windows batch examples
+All scripts are located in the `scripts/` directory and provide various automation features:
+
+#### **Repository Management Scripts**
+- **`ad.sh`** - Simple automated deployment script
+- **`adv.sh`** - Advanced deployment with multiple options
+- **`create_repo.sh`** - Create new GitHub repository
+- **`commit_repo.sh`** - Commit and push changes
+- **`simp_push.sh`** - Simple push script
+
+#### **Complex Operations Scripts**
+- **`complex_commit.sh`** - Advanced commit manipulation with backdating
+- **`complex_create.sh`** - Complex repository creation with custom options
+
+#### **Documentation Scripts** (`docs/` directory)
+Each script has corresponding documentation:
+- `docs/ad.md` - Simple deployment documentation
+- `docs/adv.md` - Advanced deployment documentation
+- `docs/create_repo.md` - Repository creation guide
+- `docs/commit_repo.md` - Commit operations guide
+- `docs/simp_push.md` - Simple push guide
+- `docs/complex_commit.md` - Complex commit guide
+- `docs/complex_create.md` - Complex creation guide
+
+#### **Development Scripts**
+- **`create-release.sh`** - Create and publish new releases (Linux/Mac)
+- **`create-release.bat`** - Create and publish new releases (Windows)
+- **`diagnose.sh`** - Diagnostic script for troubleshooting
+
+#### **Example Scripts**
+- **`run-examples.sh`** - Example usage scripts (Linux/Mac)
+- **`run-examples.bat`** - Example usage scripts (Windows)
+- **`repoflow-js.ps1`** - PowerShell wrapper for Windows
+
+### **Using the Scripts**
+
+#### **Linux/macOS**
+```bash
+# Make script executable
+chmod +x scripts/ad.sh
+
+# Run the script
+./scripts/ad.sh
+
+# Or run from scripts directory
+cd scripts
+./ad.sh
+```
+
+#### **Windows**
+```powershell
+# Run PowerShell script
+.\scripts\repoflow-js.ps1
+
+# Or run batch file
+.\scripts\run-examples.bat
+```
+
+### **Script Features**
+- ✅ **Automated Repository Creation**: Create repos directly from scripts
+- ✅ **Commit Manipulation**: Backdate commits, spread over time
+- ✅ **Multiple Commits**: Generate multiple commits automatically
+- ✅ **Branch Management**: Handle main/master branches automatically
+- ✅ **Error Handling**: Robust error checking and recovery
+- ✅ **Interactive Prompts**: Guided setup when needed
 
 ## 📞 Support
 
 - **Issues**: [GitHub Issues](https://github.com/cybergenii/repoflow/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/cybergenii/repoflow/discussions)
 - **Documentation**: [Wiki](https://github.com/cybergenii/repoflow/wiki)
+
+## 📋 Latest Updates
+
+### Version 1.0.25 (Current)
+- ✅ **Logout Feature**: Added `logout` command to clear all saved configuration
+- ✅ **Account Management**: Easy switching between GitHub accounts
+- ✅ **Security Enhancement**: Secure credential management
+
+### Version 1.0.24
+- ✅ **Human-Like Commit Messages**: 50+ professional, varied commit messages
+- ✅ **No More Robotic Messages**: Eliminates "Update project (1/10)" pattern
+- ✅ **Natural Commit History**: Makes your GitHub profile look authentic
+
+### Version 1.0.23
+- ✅ **Complete Remote Origin Handling**: Automatically adds missing remote origins
+- ✅ **Upstream Branch Tracking**: Uses `-u` flag on first push
+- ✅ **Enhanced Branch Detection**: Works with any branch name
+
+### Version 1.0.22
+- ✅ **Token-Based Authentication**: Secure push using GitHub token
+- ✅ **Multi-Account Support**: Different tokens for different repositories
+
+### Version 1.0.21
+- ✅ **Smart Branch Detection**: Automatically detects current branch
+- ✅ **No More "refspec main does not match any" Errors**
+
+### Version 1.0.20
+- ✅ **Auto-Push Fix**: Fixed commit staging issues
+- ✅ **Multiple Commits**: Properly handles multiple commit creation
+
+## 🎯 Roadmap
+
+- [ ] GitHub Actions Integration
+- [ ] Commit Analytics Dashboard
+- [ ] Team Collaboration Features
+- [ ] Custom Commit Message Templates
+- [ ] Git Hooks Support
+- [ ] Advanced Conflict Resolution
 
 ---
 
