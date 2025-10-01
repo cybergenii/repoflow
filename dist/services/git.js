@@ -23,11 +23,50 @@ class GitService {
         await this.runCommand(`git config user.email "${email}"`);
     }
     async push(remote, branch, options = {}) {
-        let command = `git push ${remote} ${branch}`;
-        if (options.force) {
-            command += ' --force';
+        // If token is provided, temporarily update the remote URL with authentication
+        let originalUrl = '';
+        if (options.token) {
+            try {
+                const { stdout } = await this.runCommand(`git remote get-url ${remote}`);
+                originalUrl = stdout.trim();
+                // Add token to URL for authentication
+                const authenticatedUrl = this.addTokenToUrl(originalUrl, options.token);
+                await this.runCommand(`git remote set-url ${remote} "${authenticatedUrl}"`);
+            }
+            catch (error) {
+                // If getting/setting URL fails, proceed without token authentication
+            }
         }
-        await this.runCommand(command);
+        try {
+            let command = `git push`;
+            // Add -u flag to set upstream if needed (first push)
+            if (options.setUpstream) {
+                command += ' -u';
+            }
+            command += ` ${remote} ${branch}`;
+            if (options.force) {
+                command += ' --force';
+            }
+            await this.runCommand(command);
+        }
+        finally {
+            // Restore original URL if we modified it
+            if (originalUrl) {
+                await this.runCommand(`git remote set-url ${remote} "${originalUrl}"`).catch(() => { });
+            }
+        }
+    }
+    addTokenToUrl(url, token) {
+        // Handle HTTPS URLs
+        if (url.startsWith('https://github.com/')) {
+            return url.replace('https://github.com/', `https://${token}@github.com/`);
+        }
+        // Handle git@ URLs - convert to HTTPS with token
+        if (url.startsWith('git@github.com:')) {
+            const path = url.replace('git@github.com:', '');
+            return `https://${token}@github.com/${path}`;
+        }
+        return url;
     }
     async getRemotes() {
         try {
@@ -57,6 +96,24 @@ class GitService {
     async initRepository(branch = 'main') {
         await this.runCommand('git init');
         await this.runCommand(`git branch -M ${branch}`);
+    }
+    async getCurrentBranch() {
+        try {
+            const { stdout } = await this.runCommand('git branch --show-current');
+            return stdout.trim() || 'main';
+        }
+        catch {
+            return 'main';
+        }
+    }
+    async hasUpstream(branch) {
+        try {
+            await this.runCommand(`git rev-parse --abbrev-ref ${branch}@{upstream}`);
+            return true;
+        }
+        catch {
+            return false;
+        }
     }
     async setRemoteUrl(name, url) {
         await this.runCommand(`git remote set-url ${name} ${url}`);

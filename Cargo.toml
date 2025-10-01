@@ -1,6 +1,6 @@
 [package]
 name = "repoflow"
-version = "1.0.0"
+version = "1.0.19"
 edition = "2021"
 authors = ["Derek Og cybersgenii@gmail.com"]
 description = "A comprehensive GitHub repository management tool with CLI and Web UI support"
@@ -35,6 +35,10 @@ indicatif = "0.17"
 
 # HTTP client
 reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
+
+[dependencies.openssl-sys]
+version = "0.9"
+features = ["vendored"]
 
 # Git operations
 git2 = "0.18"

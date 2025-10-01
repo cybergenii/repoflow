@@ -153,24 +153,53 @@ app.post('/api/auto-push', async (req, res) => {
         // Check if directory is a git repository
         const isGitRepo = await git.isRepository();
         let repoUrl = '';
+        let branch = 'main';
         if (!isGitRepo) {
-            // Create new repository
+            // Create new repository on GitHub
             repoUrl = await github.createRepository(repoName, isPrivate);
-            await git.init();
+            // Initialize git repository with main branch
+            await git.initRepository('main');
+            // Add remote origin
             await git.addRemote('origin', repoUrl);
+            branch = 'main';
         }
         else {
-            // Get existing remote URL
+            // Repository already exists, check for remote
             const remotes = await git.getRemotes();
             repoUrl = remotes['origin'] || '';
+            // Get current branch or default to main
+            branch = await git.getCurrentBranch();
+            // If no branch found (empty repo), use main
+            if (!branch) {
+                branch = 'main';
+                await git.initRepository('main');
+            }
+            // If no remote exists but repo name is provided, create and add remote
+            if (!repoUrl && repoName) {
+                repoUrl = await github.createRepository(repoName, isPrivate);
+                await git.addRemote('origin', repoUrl);
+            }
+            else if (repoUrl && repoName) {
+                // Remote exists, ensure it's set correctly (in case user wants to update it)
+                // Check if the remote matches the expected pattern
+                const expectedRepo = `${repoName}.git`;
+                if (!repoUrl.endsWith(expectedRepo)) {
+                    // Remote might be pointing to wrong repo, update it
+                    const newRepoUrl = await github.createRepository(repoName, isPrivate);
+                    await git.setRemoteUrl('origin', newRepoUrl);
+                    repoUrl = newRepoUrl;
+                }
+            }
         }
         // Set git user
         await git.setUser(config.username, config.email);
-        // Add all files
-        await git.addAll();
-        // Create commits
+        // Create commits with varied messages
         const commitCount = parseInt(multipleCommits) || 1;
         const spreadHrs = parseInt(spreadHours) || 0;
+        // Import commit message generator
+        const { generateVariedCommitMessage } = await Promise.resolve().then(() => __importStar(require('./utils/commit-messages')));
+        // Extract project name from directory or repo name
+        const projectName = repoName || directory?.split('/').pop() || 'project';
         for (let i = 0; i < commitCount; i++) {
             let commitDate = date;
             if (spreadHrs > 0 && i > 0) {
@@ -179,16 +208,26 @@ app.post('/api/auto-push', async (req, res) => {
                 baseDate.setHours(baseDate.getHours() - hoursToSubtract);
                 commitDate = baseDate.toISOString();
             }
+            // Generate varied, human-like commit messages
             const message = commitCount > 1 ?
-                `${commitMessage} (${i + 1}/${commitCount})` :
-                commitMessage;
+                generateVariedCommitMessage(i + 1, commitCount, commitMessage, projectName) :
+                (commitMessage || 'Initial commit');
+            // Add all files before each commit
+            await git.addAll();
             await git.commit({
                 message,
-                date: commitDate
+                date: commitDate,
+                force: true // Use --allow-empty to ensure commit succeeds
             });
         }
-        // Push to repository
-        await git.push('origin', 'main');
+        // Check if branch has upstream set
+        const hasUpstream = await git.hasUpstream(branch);
+        // Push to repository using the detected branch and token for authentication
+        // Use -u flag if this is the first push (no upstream set)
+        await git.push('origin', branch, {
+            token: config.token,
+            setUpstream: !hasUpstream
+        });
         res.json({
             success: true,
             message: 'Auto-push completed successfully',
@@ -220,7 +259,13 @@ app.post('/api/push', async (req, res) => {
     try {
         const { directory, options } = req.body;
         const git = new git_1.GitService(directory || process.cwd());
-        await git.push('origin', 'main', options);
+        // Load config to get GitHub token for authentication
+        const configService = new (await Promise.resolve().then(() => __importStar(require('./utils/config')))).ConfigService();
+        const config = await configService.loadConfig();
+        // Get current branch
+        const branch = await git.getCurrentBranch();
+        // Push with token authentication
+        await git.push('origin', branch, { ...options, token: config.token });
         res.json({ success: true, message: 'Push completed successfully' });
     }
     catch (error) {

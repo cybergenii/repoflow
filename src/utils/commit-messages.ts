@@ -4,26 +4,56 @@ import { promisify } from 'util';
 const execAsync = promisify(exec);
 
 const COMMIT_TEMPLATES = [
-  '🚀 Launch initial project structure',
-  '✨ Add core functionality and features',
-  '🔧 Implement configuration and setup',
-  '📝 Update documentation and README',
-  '🎨 Improve UI/UX and styling',
-  '🐛 Fix critical bugs and issues',
-  '⚡ Optimize performance and speed',
-  '🔒 Enhance security measures',
-  '📱 Add responsive design elements',
-  '🌟 Introduce new innovative features',
-  '🧹 Clean up code and refactor',
-  '🔍 Add comprehensive testing',
-  '📊 Integrate analytics and monitoring',
-  '🎯 Improve user experience flow',
-  '🛠️ Upgrade dependencies and tools',
-  '💡 Add helpful utility functions',
-  '🎉 Celebrate milestone achievements',
-  '🔄 Refine existing functionality',
-  '📈 Boost application metrics',
-  '✅ Complete feature implementation'
+  'Initial project setup and configuration',
+  'Add core features and functionality',
+  'Implement user authentication system',
+  'Update documentation and README',
+  'Improve UI/UX and overall design',
+  'Fix bugs and resolve issues',
+  'Optimize performance and loading speed',
+  'Enhance security and data protection',
+  'Add responsive design for mobile',
+  'Introduce new features and improvements',
+  'Refactor code for better maintainability',
+  'Add comprehensive test coverage',
+  'Integrate analytics and tracking',
+  'Improve user experience and flow',
+  'Update dependencies and packages',
+  'Add utility functions and helpers',
+  'Implement API endpoints',
+  'Enhance error handling and logging',
+  'Update styles and themes',
+  'Add database models and schemas',
+  'Implement data validation',
+  'Add file upload functionality',
+  'Integrate third-party services',
+  'Improve code organization',
+  'Add environment configuration',
+  'Implement caching mechanism',
+  'Update build and deployment scripts',
+  'Add user profile features',
+  'Implement search functionality',
+  'Enhance notification system',
+  'Add pagination and filtering',
+  'Implement real-time updates',
+  'Update navigation and routing',
+  'Add form validation',
+  'Implement admin dashboard',
+  'Enhance API documentation',
+  'Add loading states and animations',
+  'Implement data export features',
+  'Update error pages and handling',
+  'Add social media integration',
+  'Implement email notifications',
+  'Enhance accessibility features',
+  'Add dark mode support',
+  'Implement user settings page',
+  'Update landing page design',
+  'Add interactive components',
+  'Implement dashboard analytics',
+  'Enhance data visualization',
+  'Add multi-language support',
+  'Implement role-based access control'
 ];
 
 export async function generateCommitMessage(directory: string): Promise<string> {
@@ -65,14 +95,34 @@ export function generateVariedCommitMessage(
   commitNumber: number,
   _totalCommits: number,
   baseMessage: string,
-  projectName: string
+  projectName?: string
 ): string {
-  if (commitNumber === 1 && baseMessage) {
-    return baseMessage;
+  // First commit uses the base message or a default
+  if (commitNumber === 1) {
+    if (baseMessage && baseMessage !== 'Update project') {
+      return baseMessage;
+    }
+    return 'Initial commit';
   }
   
-  const templateIndex = (commitNumber - 1) % COMMIT_TEMPLATES.length;
-  const template = COMMIT_TEMPLATES[templateIndex];
+  // Use different templates for different commits to make it look natural
+  // Add some randomization based on commit number
+  const seed = commitNumber * 7; // Simple deterministic "randomization"
+  const templateIndex = seed % COMMIT_TEMPLATES.length;
+  const template = COMMIT_TEMPLATES[templateIndex] || 'Update project';
   
-  return projectName ? `${template} for ${projectName}` : (template || 'Update project');
+  // Only 20% of commits mention project name to keep it natural
+  const shouldMentionProject = projectName && (commitNumber % 5 === 0);
+  
+  if (shouldMentionProject) {
+    return `${template} for ${projectName}`;
+  }
+  
+  return template;
+}
+
+// Generate a random human-like commit message
+export function generateRandomCommitMessage(): string {
+  const randomIndex = Math.floor(Math.random() * COMMIT_TEMPLATES.length);
+  return COMMIT_TEMPLATES[randomIndex] || 'Update project';
 }
