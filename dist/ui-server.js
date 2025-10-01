@@ -283,6 +283,29 @@ app.post('/api/validate-token', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+app.post('/api/logout', async (_req, res) => {
+    try {
+        const configService = new (await Promise.resolve().then(() => __importStar(require('./utils/config')))).ConfigService();
+        const configExists = await configService.configExists();
+        if (!configExists) {
+            res.json({
+                success: true,
+                message: 'No configuration found. You are not logged in.',
+                wasLoggedIn: false
+            });
+            return;
+        }
+        await configService.clearConfig();
+        res.json({
+            success: true,
+            message: 'Successfully logged out! All saved configuration has been cleared.',
+            wasLoggedIn: true
+        });
+    }
+    catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 // Serve UI
 app.get('*', (_req, res) => {
     res.sendFile(path_1.default.join(__dirname, '../ui/dist/index.html'));

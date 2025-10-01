@@ -52,6 +52,27 @@ class ConfigService {
             throw new Error(`Failed to save configuration: ${error}`);
         }
     }
+    async clearConfig() {
+        try {
+            // Delete the config file
+            await promises_1.default.unlink(CONFIG_FILE);
+        }
+        catch (error) {
+            // If file doesn't exist, that's fine
+            if (error.code !== 'ENOENT') {
+                throw new Error(`Failed to clear configuration: ${error}`);
+            }
+        }
+    }
+    async configExists() {
+        try {
+            await promises_1.default.access(CONFIG_FILE);
+            return true;
+        }
+        catch {
+            return false;
+        }
+    }
 }
 exports.ConfigService = ConfigService;
 async function loadConfig() {

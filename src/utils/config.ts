@@ -47,6 +47,27 @@ export class ConfigService {
       throw new Error(`Failed to save configuration: ${error}`);
     }
   }
+
+  async clearConfig(): Promise<void> {
+    try {
+      // Delete the config file
+      await fs.unlink(CONFIG_FILE);
+    } catch (error: any) {
+      // If file doesn't exist, that's fine
+      if (error.code !== 'ENOENT') {
+        throw new Error(`Failed to clear configuration: ${error}`);
+      }
+    }
+  }
+
+  async configExists(): Promise<boolean> {
+    try {
+      await fs.access(CONFIG_FILE);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 }
 
 export async function loadConfig(): Promise<RepoFlowConfig> {

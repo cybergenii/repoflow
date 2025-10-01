@@ -157,6 +157,19 @@ program
         process.exit(1);
     }
 });
+// Logout command
+program
+    .command('logout')
+    .description('Logout and clear all saved configuration')
+    .action(async () => {
+    try {
+        await handleLogout();
+    }
+    catch (error) {
+        console.error('❌ Error:', error);
+        process.exit(1);
+    }
+});
 // UI command
 program
     .command('ui')
@@ -579,6 +592,20 @@ async function handleConfig(options) {
     if (!options.token && !options.username && !options.email) {
         console.log('Use --help to see available options');
     }
+}
+// Logout command handler
+async function handleLogout() {
+    const configExists = await configService.configExists();
+    if (!configExists) {
+        console.log('ℹ️  No configuration found. You are not logged in.');
+        return;
+    }
+    await configService.clearConfig();
+    console.log('✅ Successfully logged out!');
+    console.log('🗑️  All saved configuration has been cleared.');
+    console.log('');
+    console.log('To login again, use:');
+    console.log('  repoflow-js config --token YOUR_TOKEN --username USERNAME --email EMAIL');
 }
 // UI command handler
 async function handleUI(options) {

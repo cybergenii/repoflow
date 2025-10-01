@@ -10,6 +10,8 @@ export declare class ConfigService {
         email: string;
         token: string;
     }>): Promise<void>;
+    clearConfig(): Promise<void>;
+    configExists(): Promise<boolean>;
 }
 export declare function loadConfig(): Promise<RepoFlowConfig>;
 export declare function saveConfig(config: RepoFlowConfig): Promise<void>;
