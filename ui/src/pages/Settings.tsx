@@ -157,7 +157,7 @@ const Settings: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-6 flex space-x-3">
+        <div className="mt-6">
           <button
             onClick={saveSettings}
             disabled={saving}
@@ -165,13 +165,21 @@ const Settings: React.FC = () => {
           >
             {saving ? 'Saving...' : 'Save Settings'}
           </button>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
-          >
-            Logout
-          </button>
         </div>
+      </div>
+
+      {/* Logout Section */}
+      <div className="bg-white shadow rounded-lg p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Account Management</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Logout to clear all saved configuration including your GitHub token and credentials.
+        </p>
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+        >
+          Logout
+        </button>
       </div>
 
       <div className="bg-white shadow rounded-lg p-6">

@@ -18,7 +18,30 @@ app.use(express.static(path.join(__dirname, '../ui/dist')));
 // API Routes
 app.get('/api/status', async (req, res) => {
   try {
-    const git = new GitService((req.query['dir'] as string) || process.cwd());
+    const directory = (req.query['dir'] as string) || process.cwd();
+    const git = new GitService(directory);
+    
+    // Check if it's a git repository first
+    const isRepo = await git.isRepository();
+    if (!isRepo) {
+      res.json({ 
+        success: true, 
+        data: {
+          name: 'No Repository',
+          url: '',
+          branch: 'main',
+          lastCommit: '',
+          unpushed_commits: 0,
+          has_changes: false,
+          staged_files: 0,
+          staged: [],
+          modified: [],
+          untracked: []
+        }
+      });
+      return;
+    }
+    
     const status = await git.getStatus();
     res.json({ success: true, data: status });
   } catch (error: any) {
@@ -28,7 +51,19 @@ app.get('/api/status', async (req, res) => {
 
 app.get('/api/commits', async (req, res) => {
   try {
-    const git = new GitService((req.query['dir'] as string) || process.cwd());
+    const directory = (req.query['dir'] as string) || process.cwd();
+    const git = new GitService(directory);
+    
+    // Check if it's a git repository first
+    const isRepo = await git.isRepository();
+    if (!isRepo) {
+      res.json({ 
+        success: true, 
+        data: []
+      });
+      return;
+    }
+    
     const count = parseInt((req.query['count'] as string) || '10') || 10;
     const commits = await git.getCommits(count);
     res.json({ success: true, data: commits });

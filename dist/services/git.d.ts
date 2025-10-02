@@ -24,6 +24,8 @@ export declare class GitService {
     getCommits(count?: number): Promise<CommitInfo[]>;
     private createMultipleCommits;
     private runCommand;
+    private runCommandWithSpawn;
+    private getShellOptions;
     private extractRepoName;
 }
 //# sourceMappingURL=git.d.ts.map

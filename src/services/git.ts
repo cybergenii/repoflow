@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
 import { CommitInfo, CommitOptions, RepoStatus } from '../types';
 
@@ -55,11 +55,11 @@ export class GitService {
       
       command += ` ${remote} ${branch}`;
       
-      if (options.force) {
-        command += ' --force';
-      }
+    if (options.force) {
+      command += ' --force';
+    }
       
-      await this.runCommand(command);
+    await this.runCommand(command);
     } finally {
       // Restore original URL if we modified it
       if (originalUrl) {
@@ -271,8 +271,8 @@ export class GitService {
       // Add all changes before each commit to ensure there's something to commit
       await this.addAll();
       
-      process.env['GIT_AUTHOR_DATE'] = isoDate;
-      process.env['GIT_COMMITTER_DATE'] = isoDate;
+          process.env['GIT_AUTHOR_DATE'] = isoDate;
+          process.env['GIT_COMMITTER_DATE'] = isoDate;
       
       try {
         await this.runCommand(`git commit --allow-empty -m "${message}"`);
@@ -284,15 +284,128 @@ export class GitService {
   }
 
   private async runCommand(command: string): Promise<{ stdout: string; stderr: string }> {
+    // Try different shell configurations for better compatibility
+    const shellOptions = this.getShellOptions();
+    
+    for (let i = 0; i < shellOptions.length; i++) {
+      const shellConfig = shellOptions[i];
     try {
       const { stdout, stderr } = await execAsync(command, { 
         cwd: this.workingDir,
+          ...shellConfig,
         maxBuffer: 1024 * 1024 * 10 // 10MB buffer
       });
       return { stdout, stderr };
     } catch (error: any) {
-      throw new Error(`Command failed: ${command}\nError: ${error.message}`);
+        // If this is the last option, try spawn as fallback
+        if (i === shellOptions.length - 1) {
+          try {
+            return await this.runCommandWithSpawn(command);
+          } catch (spawnError: any) {
+            const isTermux = process.env['TERMUX_VERSION'] || 
+                            process.env['PREFIX']?.includes('com.termux') ||
+                            process.cwd().includes('com.termux');
+            
+            let errorMessage = `Command failed: ${command}\nError: ${error.message}`;
+            
+            if (isTermux) {
+              errorMessage += `\n\nTermux Environment Detected:\n`;
+              errorMessage += `- TERMUX_VERSION: ${process.env['TERMUX_VERSION'] || 'not set'}\n`;
+              errorMessage += `- PREFIX: ${process.env['PREFIX'] || 'not set'}\n`;
+              errorMessage += `- Working Directory: ${this.workingDir}\n`;
+              errorMessage += `- Platform: ${process.platform}\n`;
+              errorMessage += `\nTroubleshooting:\n`;
+              errorMessage += `1. Make sure git is installed: pkg install git\n`;
+              errorMessage += `2. Check if shell is available: which bash\n`;
+              errorMessage += `3. Try running: git --version\n`;
+              errorMessage += `4. Spawn fallback also failed: ${spawnError.message}\n`;
+            }
+            
+            throw new Error(errorMessage);
+          }
+        }
+        // Continue to next shell option
+        continue;
+      }
     }
+    
+    throw new Error(`Command failed: ${command}\nError: No suitable shell found`);
+  }
+
+  private async runCommandWithSpawn(command: string): Promise<{ stdout: string; stderr: string }> {
+    return new Promise((resolve, reject) => {
+      const isTermux = process.env['TERMUX_VERSION'] || 
+                      process.env['PREFIX']?.includes('com.termux') ||
+                      process.cwd().includes('com.termux');
+      
+      // For Termux, try to use bash directly
+      const shell = isTermux ? 'bash' : (process.platform === 'win32' ? 'cmd.exe' : 'sh');
+      const args = isTermux ? ['-c', command] : (process.platform === 'win32' ? ['/c', command] : ['-c', command]);
+      
+      const child = spawn(shell, args, {
+        cwd: this.workingDir,
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
+      
+      let stdout = '';
+      let stderr = '';
+      
+      child.stdout?.on('data', (data) => {
+        stdout += data.toString();
+      });
+      
+      child.stderr?.on('data', (data) => {
+        stderr += data.toString();
+      });
+      
+      child.on('close', (code) => {
+        if (code === 0) {
+          resolve({ stdout, stderr });
+        } else {
+          reject(new Error(`Command failed with exit code ${code}: ${command}\nStderr: ${stderr}`));
+        }
+      });
+      
+      child.on('error', (error) => {
+        reject(new Error(`Spawn failed: ${error.message}`));
+      });
+    });
+  }
+
+  private getShellOptions(): Array<{ shell?: string }> {
+    const options: Array<{ shell?: string }> = [];
+    
+    // Check if we're in Termux (Android) - multiple detection methods
+    const isTermux = process.env['TERMUX_VERSION'] || 
+                     process.env['PREFIX']?.includes('com.termux') ||
+                     process.cwd().includes('com.termux');
+    
+    if (isTermux) {
+      // Try Termux-specific shells first
+      options.push({ shell: '/data/data/com.termux/files/usr/bin/bash' });
+      options.push({ shell: '/data/data/com.termux/files/usr/bin/sh' });
+      options.push({ shell: '/system/bin/sh' });
+      options.push({ shell: 'bash' });
+      options.push({ shell: 'sh' });
+    }
+    
+    // Platform-specific options
+    if (process.platform === 'win32') {
+      options.push({ shell: 'cmd.exe' });
+      options.push({ shell: 'powershell.exe' });
+    } else {
+      // Unix-like systems
+      if (process.env['SHELL']) {
+        options.push({ shell: process.env['SHELL'] });
+      }
+      options.push({ shell: '/bin/bash' });
+      options.push({ shell: '/bin/sh' });
+    }
+    
+    // Fallback: let Node.js auto-detect (no shell specified)
+    options.push({});
+    
+    return options;
   }
 
   private extractRepoName(url: string): string {
